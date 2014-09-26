@@ -7,10 +7,11 @@ def corner(path):
 	if path=='0':
 		path=0;
 	cap = cv2.VideoCapture(path)
-
+	ip_method = ip.get_instace(ip.IPMethod.HARRIS_CORNER);
+	
 	while(cap.isOpened()):
 		_, frame = cap.read()
-		kp = ip.extract(ip.IPMethod.SIFT,frame);
+		kp = ip_method.detect(frame);
 		frame = cv2.drawKeypoints(frame, kp, color=(255,0,0))
 		
 		cv2.imshow('morph',frame);
