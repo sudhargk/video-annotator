@@ -6,6 +6,7 @@ class IPMethod(object):
 	SIFT = 1
 	HARRIS_CORNER = 2
 	TOMASI = 3
+	SURF = 4
 
 """
 	Extracts the interest points for the given input - numpy array or file
@@ -42,6 +43,8 @@ class InterestPointImpl(object):
 			return TOMASI_Impl()
 		elif method == IPMethod.HARRIS_CORNER:
 			return HARRIS_CORNER_Impl();
+		elif method == IPMethod.SURF:
+			return SURF_Impl();
 		else:
 			raise InvalidConfigType		
 		
@@ -54,9 +57,10 @@ class InterestPointImpl(object):
 		if kp is None:
 			kp = self.detect(inp);
 		sift = cv2.SIFT();
-		return sift.compute(__gray__(inp),kp);
+		_,kpDesc = sift.compute(self.__gray__(inp),kp);
+		return kpDesc
 
-	def detectAndCompute(self):
+	def detectAndCompute(self,inp):
 		inp = self.__load__(inp);
 		kp = self.detect(inp);
 		kpDesc = self.compute(inp,kp);
@@ -64,7 +68,7 @@ class InterestPointImpl(object):
 	
 
 class TOMASI_Impl(InterestPointImpl):
-	def __init__(self,maxCorners=30,minDistance=10,qualityLevel=0.01):
+	def __init__(self,maxCorners=200,minDistance=2,qualityLevel=0.01):
 		self.maxCorners = maxCorners;
 		self.qualityLevel = qualityLevel
 		self.minDistance = minDistance
@@ -80,7 +84,7 @@ class TOMASI_Impl(InterestPointImpl):
 		
 
 class HARRIS_CORNER_Impl(InterestPointImpl):
-	def __init__(self,block_size=3,ap_size=3,harris_param=0.04,qualityLevel=0.01):
+	def __init__(self,block_size=3,ap_size=3,harris_param=0.04,qualityLevel=0.05):
 		self.block_size = block_size;
 		self.ap_size=ap_size;
 		self.k = harris_param;
@@ -109,9 +113,25 @@ class SIFT_Impl(InterestPointImpl):
 		inp = self.__gray__(inp);
 		if kp is None:
 			kp = self.sift.detect(inp,None)
-		kpDesc = self.sift.compute(inp,kp);
+		kp,kpDesc = self.sift.compute(inp,kp);
 		return 	kpDesc
 
+class SURF_Impl(InterestPointImpl):
+	def __init__(self):
+		self.surf = cv2.SURF()
+		
+	def detect(self,inp):
+		inp = self.__load__(inp);
+		kp = self.surf.detect(self.__gray__(inp),None)
+		return kp
+		
+	def compute(self,inp,kp=None):
+		inp = self.__load__(inp);
+		inp = self.__gray__(inp);
+		if kp is None:
+			kp = self.surf.detect(inp,None)
+		kp,kpDesc = self.surf.compute(inp,kp);
+		return 	kpDesc
 
 		
 	
