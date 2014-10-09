@@ -18,29 +18,36 @@ def draw_detections(img, rects, thickness = 1,shrinkage = 0.05):
 		cv2.rectangle(img, (x+pad_w, y+pad_h), (x+w-pad_w, y+h-pad_h), (0, 255, 0), thickness)
 
 	
-def tracker(path):
-	#initialization for default value
-	if path=='0':
-		path=0;	
+def tracker(inPath,outPath='out.avi'):
 		
 	#Default values
 	MIN_POINTS_TO_CLUSTER = 10
 	MAX_CLUSTERS = 100
+	ALPHA = 0.35
 	DO_CLUSTERING = False
+	DO_CROPPING = True
+	DO_LABELLING = False
 	random_colors = np.random.randint(256, size=(MAX_CLUSTERS, 3))
 	
 	#Clustering model
 	#model = MeanShift(bandwidth=None, bin_seeding=True)
 	model = DBSCAN(eps=3, min_samples=5)
+
+	print "INPATH : ",inPath
+	print "OUTPATH : ",outPath
+	print "Starting background subtraction for object tracking..........."
 	
-	print "Background substraction for object tracking............"
-	cap = cv2.VideoCapture(path)
+	
+	cap = cv2.VideoCapture(inPath)
 	ret, prev_frame = cap.read()	
 	
 	w = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)); h = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+	w_crop = 80; h_crop = 160
 	fourcc = cv2.cv.CV_FOURCC(*'XVID')
-	vidout = cv2.VideoWriter('out.avi',fourcc,20,(w,h))
-	
+	if DO_CROPPING:
+		vidout = cv2.VideoWriter(outPath,fourcc,20,(w_crop,h_crop))
+	else:
+		vidout = cv2.VideoWriter(outPath,fourcc,20,(w,h))	
 	
 	def cap_read():
 		if cap.isOpened():
@@ -53,12 +60,14 @@ def tracker(path):
 	
 	N = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)); i=0;
 	
-	bgdModel = np.zeros((1,65),np.float64)
-	fgdModel = np.zeros((1,65),np.float64)
+	prv_mean = None
+	#bgdModel = np.zeros((1,65),np.float64)
+	#fgdModel = np.zeros((1,65),np.float64)
 	while(True):
 		i=i+1;
 		mask_frame =  bgsubImpl.process()
 		mask_frame = cv2.medianBlur(mask_frame,5)
+		mask_frame = cv2.medianBlur(mask_frame,3)
 		print 'Proceesing ... {0}%\r'.format((i*100/N)),
 		if bgsubImpl.isFinish():
 			break	
@@ -74,17 +83,32 @@ def tracker(path):
 					mask_frame[points[idx][0]][points[idx][1]]=lbl+1;
 					
 		# labelling
-		img = np.zeros((h,w,3), np.uint8)	# Create a black image
-		#img = bgsubImpl.cur_frame
-		for lbl,val in enumerate(np.unique(mask_frame)):
-			if lbl == 0:
-				continue;
-			if lbl >= MAX_CLUSTERS:
-				break;
-			color = tuple(random_colors[lbl])
-			for point_x,point_y in np.column_stack(np.where(mask_frame==val)):
-				cv2.circle(img,(point_y,point_x), 2,color, 1)
-		vidout.write(img);
+		#img = np.zeros((h,w,3), np.uint8)	# Create a black image
+		img = bgsubImpl.cur_frame
+		if DO_LABELLING:
+			for lbl,val in enumerate(np.unique(mask_frame)):
+				if lbl == 0:
+					continue;
+				if lbl >= MAX_CLUSTERS:
+					break;
+				color = tuple(random_colors[lbl])
+				for point_x,point_y in np.column_stack(np.where(mask_frame==val)):
+					cv2.circle(img,(point_y,point_x), 2,color, 1)
+		
+		points =  np.column_stack(np.where(mask_frame==1))
+		if points.shape[0] > 0:
+			mean = points.mean(axis=0)
+			if not prv_mean is None:
+				mean = ALPHA*mean + (1-ALPHA)*prv_mean
+			(y,x)=np.int32(mean);
+			if x-w_crop/2>0 and x+w_crop/2<w and y-h_crop/2>0 and y+h_crop/2<h :
+				if DO_CROPPING:
+					img = img[y-h_crop/2:y+h_crop/2,x-w_crop/2:x+w_crop/2];
+				else:
+					cv2.rectangle(img,(x-w_crop/2,y-h_crop/2),(x+w_crop/2,y+h_crop/2),(255,0,0),2);
+				vidout.write(img);
+			prv_mean = np.int32(mean);
+			
 
 		
 		#cv2.grabCut(bgsubImpl._cur_frame,mask_frame,None,bgdModel,fgdModel,2,cv2.GC_INIT_WITH_MASK)
@@ -98,4 +122,8 @@ def tracker(path):
 	
 if __name__ == "__main__":
 	import sys;
-	tracker(sys.argv[1]);
+	if sys.argv.__len__()==2:
+		tracker(sys.argv[1]);
+	elif sys.argv.__len__()==3:
+		tracker(sys.argv[1],sys.argv[2]);
+	
