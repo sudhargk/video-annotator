@@ -11,7 +11,7 @@ def tracker(path):
 		path=0;
 	
 	cap = cv2.VideoCapture(path)
-	ip_method = ip.get_instace(ip.IPMethod.TOMASI);
+	ip_method = ip.get_instace(ip.IPMethod.HARRIS_CORNER);
 	
 	#FLANN Properties
 	MIN_FRAMES_COUNT = 200
