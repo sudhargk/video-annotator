@@ -25,8 +25,9 @@ def tracker(inPath,outPath='out.avi'):
 	MAX_CLUSTERS = 100
 	ALPHA = 0.35
 	DO_CLUSTERING = False
-	DO_CROPPING = True
-	DO_LABELLING = False
+	DO_CROPPING = False
+	DO_LABELLING = True
+	DO_BOUNDING_BOX = False
 	random_colors = np.random.randint(256, size=(MAX_CLUSTERS, 3))
 	
 	#Clustering model
@@ -95,21 +96,22 @@ def tracker(inPath,outPath='out.avi'):
 				for point_x,point_y in np.column_stack(np.where(mask_frame==val)):
 					cv2.circle(img,(point_y,point_x), 2,color, 1)
 		
-		points =  np.column_stack(np.where(mask_frame==1))
-		if points.shape[0] > 0:
-			mean = points.mean(axis=0)
-			if not prv_mean is None:
-				mean = ALPHA*mean + (1-ALPHA)*prv_mean
-			(y,x)=np.int32(mean);
-			if x-w_crop/2>0 and x+w_crop/2<w and y-h_crop/2>0 and y+h_crop/2<h :
-				if DO_CROPPING:
-					img = img[y-h_crop/2:y+h_crop/2,x-w_crop/2:x+w_crop/2];
-				else:
-					cv2.rectangle(img,(x-w_crop/2,y-h_crop/2),(x+w_crop/2,y+h_crop/2),(255,0,0),2);
-				vidout.write(img);
-			prv_mean = np.int32(mean);
-			
-
+		if DO_BOUNDING_BOX:
+			points =  np.column_stack(np.where(mask_frame==1))
+			if points.shape[0] > 0:
+				mean = points.mean(axis=0)
+				if not prv_mean is None:
+					mean = ALPHA*mean + (1-ALPHA)*prv_mean
+				(y,x)=np.int32(mean);
+				if x-w_crop/2>0 and x+w_crop/2<w and y-h_crop/2>0 and y+h_crop/2<h :
+					if DO_CROPPING:
+						img = img[y-h_crop/2:y+h_crop/2,x-w_crop/2:x+w_crop/2];
+					else:
+						cv2.rectangle(img,(x-w_crop/2,y-h_crop/2),(x+w_crop/2,y+h_crop/2),(255,0,0),2);
+					vidout.write(img);
+				prv_mean = np.int32(mean);
+		else:
+			vidout.write(img);
 		
 		#cv2.grabCut(bgsubImpl._cur_frame,mask_frame,None,bgdModel,fgdModel,2,cv2.GC_INIT_WITH_MASK)
 		#bgmask = np.where((mask_frame==2)|(mask_frame==0),0,1).astype('uint8')
