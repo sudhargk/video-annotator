@@ -11,13 +11,13 @@ def createHeader(filepath,num_features):
 	_file.write(os.linesep)
 	
 def write_to_file (frames,filepath,perms,min_frames=10):
-	_file = open(filepath,'a+b');
+	_file = open(filepath,'a+b');o
 	num_frames = frames.__len__();
 	indices = np.arange(num_frames);
 	for index in np.arange(perms):
 		perm = np.random.permutation(indices)
 		perm_frames=[];
-		for p in perm[:min_frames]:
+		for p in np.sort(perm[:min_frames]):
 			perm_frames.extend(frames[p].flatten());
 		for ele in perm_frames:
 			_file.write('%f '%ele);

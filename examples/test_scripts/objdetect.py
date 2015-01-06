@@ -6,6 +6,10 @@ def segment(path):
 	if path=='0':
 		path=0;
 	cap = cv2.VideoCapture(path)
+	
+	#Background segmentation
+	
+	
 
 	while(cap.isOpened()):
 		_, frame = cap.read()

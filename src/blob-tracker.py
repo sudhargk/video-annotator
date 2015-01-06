@@ -21,18 +21,21 @@ def draw_detections(img, rects, thickness = 1,shrinkage = 0.05):
 def tracker(inPath,outPath='out.avi'):
 		
 	#Default values
+	MIN_FRAMES_COUNT = 1000
 	MIN_POINTS_TO_CLUSTER = 10
 	MAX_CLUSTERS = 100
+	SKIP_FRAMES = 0
 	ALPHA = 0.35
-	DO_CLUSTERING = False
+	DO_CLUSTERING = True
 	DO_CROPPING = False
 	DO_LABELLING = True
 	DO_BOUNDING_BOX = False
+
 	random_colors = np.random.randint(256, size=(MAX_CLUSTERS, 3))
 	
 	#Clustering model
 	#model = MeanShift(bandwidth=None, bin_seeding=True)
-	model = DBSCAN(eps=3, min_samples=5)
+	model = DBSCAN(eps=5, min_samples=35)
 
 	print "INPATH : ",inPath
 	print "OUTPATH : ",outPath
@@ -40,7 +43,15 @@ def tracker(inPath,outPath='out.avi'):
 	
 	
 	cap = cv2.VideoCapture(inPath)
-	ret, prev_frame = cap.read()	
+	ret, prev_frame = cap.read()
+	skip_i = 0;	
+	while(cap.isOpened()):
+		skip_i=skip_i+1;
+		if skip_i > SKIP_FRAMES:
+			break;
+		ret, prev_frame = cap.read()
+		if not ret:
+			break;
 	
 	w = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)); h = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
 	w_crop = 80; h_crop = 160
@@ -60,17 +71,17 @@ def tracker(inPath,outPath='out.avi'):
 	bgsubImpl.setShape((h,w))
 	
 	N = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)); i=0;
-	
+	N = min(N-SKIP_FRAMES,MIN_FRAMES_COUNT)
 	prv_mean = None
-	#bgdModel = np.zeros((1,65),np.float64)
-	#fgdModel = np.zeros((1,65),np.float64)
+	bgdModel = np.zeros((1,65),np.float64)
+	fgdModel = np.zeros((1,65),np.float64)
 	while(True):
 		i=i+1;
 		mask_frame =  bgsubImpl.process()
 		mask_frame = cv2.medianBlur(mask_frame,5)
 		mask_frame = cv2.medianBlur(mask_frame,3)
 		print 'Proceesing ... {0}%\r'.format((i*100/N)),
-		if bgsubImpl.isFinish():
+		if bgsubImpl.isFinish() or i>MIN_FRAMES_COUNT:
 			break	
 
 		#clustering
@@ -86,6 +97,10 @@ def tracker(inPath,outPath='out.avi'):
 		# labelling
 		#img = np.zeros((h,w,3), np.uint8)	# Create a black image
 		img = bgsubImpl.cur_frame
+		#_mask_frame = mask_frame
+		#cv2.grabCut(img,_mask_frame,None,bgdModel,fgdModel,2,cv2.GC_INIT_WITH_MASK)
+		#bgmask = np.where((_mask_frame==2)|(_mask_frame==0),0,1).astype('uint8')
+		#img = img*bgmask[:,:,np.newaxis]
 		if DO_LABELLING:
 			for lbl,val in enumerate(np.unique(mask_frame)):
 				if lbl == 0:
@@ -108,14 +123,11 @@ def tracker(inPath,outPath='out.avi'):
 						img = img[y-h_crop/2:y+h_crop/2,x-w_crop/2:x+w_crop/2];
 					else:
 						cv2.rectangle(img,(x-w_crop/2,y-h_crop/2),(x+w_crop/2,y+h_crop/2),(255,0,0),2);
+						cv2.putText(img,"waving",(x+w_crop/2,y+h_crop/2),cv2.FONT_HERSHEY_SIMPLEX, 1, 190);
 					vidout.write(img);
 				prv_mean = np.int32(mean);
 		else:
 			vidout.write(img);
-		
-		#cv2.grabCut(bgsubImpl._cur_frame,mask_frame,None,bgdModel,fgdModel,2,cv2.GC_INIT_WITH_MASK)
-		#bgmask = np.where((mask_frame==2)|(mask_frame==0),0,1).astype('uint8')
-		#mask_frame = bgsubImpl._cur_frame*bgmask[:,:,np.newaxis]
 		
 		
 	cap.release();
