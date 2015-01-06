@@ -23,7 +23,7 @@ def write_to_file (frames,filepath,perms,min_frames=10):
 			_file.write('%f '%ele);
 		_file.write(os.linesep)
 
-def write(frames,out_paths,split_ratio = [9,3,3],min_frames=10):
+def write(frames,out_paths,split_ratio = [6,2,2],min_frames=10):
 	#training
 	write_to_file(frames,out_paths[0],split_ratio[0],min_frames);
 	#testing
@@ -31,7 +31,7 @@ def write(frames,out_paths,split_ratio = [9,3,3],min_frames=10):
 	#validation
 	write_to_file(frames,out_paths[2],split_ratio[2],min_frames);
 	
-def extractFromVideo(inPath,out_paths=['train.txt','test.txt','val.txt'],MIN_FRAMES = 10,DO_RESIZE=True,new_sz = (20,40)):
+def extractFromVideo(inPath,out_paths=['train.txt','test.txt','val.txt'],MIN_FRAMES = 10,DO_RESIZE=True,new_sz = (40,80)):
 	#Default values
 	MAX_FRAMES = 100
 	ALPHA = 0.25
@@ -105,9 +105,9 @@ def extract(dirPath,export_path="out/",paths=['train_%s.txt','test_%s.txt','val_
 	
 	for _dir in listdir(dirPath):
 		print "Initializing %s......."%_dir
-		out_paths = [export_path+(p)%_dir for p in paths];
+		out_paths = [join(export_path,(p)%_dir) for p in paths];
 		for _file in out_paths:
-			createHeader(_file,10*20*40*3);
+			createHeader(_file,10*40*80*3);
 		print "Processing %s......."%_dir
 		for _file in listdir(join(dirPath,_dir)):
 			_path = join(dirPath,_dir,_file)
@@ -118,6 +118,8 @@ if __name__ == "__main__":
 	import sys;
 	if sys.argv.__len__()==2:
 		extract(sys.argv[1]);
+	if sys.argv.__len__()==3:
+		extract(sys.argv[1],sys.argv[2]);
 	else:
 		print "Insufficient arguments......"
 	
