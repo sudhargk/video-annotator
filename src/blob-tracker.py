@@ -2,21 +2,6 @@ import cv2
 import numpy as np
 import segmentation.bgSubstaction as bgsub
 from sklearn.cluster import MeanShift,DBSCAN, estimate_bandwidth
-
-#A box r inside the other box q
-def inside(r, q):
-	rx, ry, rw, rh = r
-	qx, qy, qw, qh = q
-	return rx > qx and ry > qy and rx + rw < qx + qw and ry + rh < qy + qh
-
-#Draw rectangle and store on img
-def draw_detections(img, rects, thickness = 1,shrinkage = 0.05):
-	for x, y, w, h in rects:
-		# the HOG detector returns slightly larger rectangles than the real objects.
-		# so we slightly shrink the rectangles to get a nicer output.
-		pad_w, pad_h = int(shrinkage*w), int(shrinkage*h)
-		cv2.rectangle(img, (x+pad_w, y+pad_h), (x+w-pad_w, y+h-pad_h), (0, 255, 0), thickness)
-
 	
 def tracker(inPath,outPath='out.avi'):
 		
