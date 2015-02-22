@@ -1,0 +1,123 @@
+import cv2,time
+import numpy as np
+from skimage.measure import regionprops
+from skimage import  segmentation, color
+from scipy.spatial.distance import pdist,squareform
+
+class Saliency(object):	
+	def __init__(self, shape, num_superpixels = 400,compactness = 40,components = 20, doProfile = False,
+						useLAB=True,useColor=True,useTexture=False,doCUT=False):
+		self.shape = shape
+		self.num_superpixels = num_superpixels
+		self.compactness = compactness
+		self.doProfile = doProfile;
+		self.useLAB = useLab;
+		self.useColor = useColor;
+		self.useTexture = useTexture;
+		self.doCUT = doCUT
+	""" 
+		Quantization of all colors using histogram equalization
+	"""
+	def quantize (self,cur_frame,do_equalize=True):
+		start_time = time.time();
+		self.q_frame = cur_frame.copy();
+		if do_equalize:
+			self.q_frame[:,:,0] = cv2.equalizeHist(cur_frame[:,:,0])
+			self.q_frame[:,:,1] = cv2.equalizeHist(cur_frame[:,:,1])
+			self.q_frame[:,:,2] = cv2.equalizeHist(cur_frame[:,:,2])
+		if self.doProfile:
+			cv2.imwrite('outq.png',self.q_frame);
+			print "Quantization time : ",time.time()-start_time
+			
+	"""
+		Extract Color properties either LAB color or RGB color
+	"""
+	def extract_color(self):
+		if self.useLAB:
+			lab_frame = cv2.cvtColor(self.q_frame,cv2.COLOR_RGB2LAB);
+			color_data = np.array([np.sum(lab_frame[np.where(self.regions==label)],0)
+											for label in range(self.num_regions)])
+		else:
+			color_data = np.array([np.sum(self.q_frame[np.where(self.regions==label)],0)
+		
+		_inv_freq = 1/(self.freq+0.0000001); color_data = self.color_data*_inv_freq[:,None]
+		return color_data;
+		
+	"""
+		Extract GLCM based texture property
+	"""
+	def extract_texture(self):
+		gray_frame = cv2.cvtColor(self.q_frame,cv2.COLOR_RGB2GRAY)
+		def texture_prop(region,patch_size = 5):
+			_mean_min = self.mean[region]-patch_size;
+			_mean_max = self.mean[region]+patch_size;
+			glcm = greycomatrix(gray_frame[_mean_min[0]:_mean_max[0],_mean_min[1]:_mean_max[1]],
+						[3], [0], 256, symmetric=True, normed=True)
+			_dis = greycoprops(glcm, 'dissimilarity')[0, 0];
+			_cor = greycoprops(glcm, 'correlation')[0, 0];
+			return (_dis,_cor);
+		texture_data = np.array([texture_prop(region) for region in range(self.num_regions)])
+		return texture_data
+		
+	"""
+		Initial segmentation using oversegmentation using slic
+	"""
+	def build_region(self):
+		start_time = time.time();
+		self.regions = segmentation.slic(self.q_frame,self.num_superpixels, self.compactness,convert2lab=useLab,multichannel=True)
+		self.num_regions = np.max(self.regions) + 1;
+		self.s_frame = color.label2rgb(labels,self.q_frame, kind='avg')
+		self.mean = np.array([region['centroid'] for region in regionprops(self.regions+1)])
+		self.freq = np.array([np.sum(self.regions==region) for region in range(self.num_region)])
+		if self.useColor:
+			self.color_data = extract_color(useLAB);			
+		if self.useTexture:
+			self.texture_data = extract_texture();
+			
+		if self.useTexture and self.useColor:
+			self.data = np.hstack((self.color_data,self.texture_data))
+		elif self.useTexture:
+			self.data = self.texture_data
+		else
+			self.data = self.color_data
+						
+		if self.doProfile:
+			cv2.imwrite('outs.png',self.s_frame);					
+			print "Build region (preprocess) : ",time.time()-start_time
+	
+	"""
+		Performs saliency cut using the grab cut algorithm, if doCUT set false then it just applies threshold
+	"""
+	def saliency_cut(self,thresh=0.7,doCUT=True,
+			scale_l = np.array([[[0,0],[0.25,0],[0,0.25],[0.25,0.25],0.125,0.125]]),
+			scale_u = np.array([[0.75,0.75],[1,0.75],[0.75,1],[1,1],[0.875,0.875]])):
+		start_time = time.time();
+		_,self.mask = cv2.threshold(self.saliency,thresh*255,1,cv2.THRESH_BINARY)
+		if self.doCUT:
+			scale_l = np.array(scale_l * self.shape[0],np.uint);
+			scale_u = np.array(scale_u * self.shape[1],np.uint);
+			rect = np.hstack((scale_l,scale_u));
+			bgdModel = np.zeros((1,65),np.float64); fgdModel = np.zeros((1,65),np.float64)
+			out_mask = np.zeros(self.shape[:2],np.bool);
+			for idx in range(rect.__len__()):
+				in_mask = self.mask.copy();
+				cv2.grabCut(self.q_frame,in_mask,tuple(rect[idx,:]),bgdModel,fgdModel,2,cv2.GC_INIT_WITH_MASK)
+				out_mask = out_mask|np.where((in_mask==0)|(in_mask==2),False,True)
+				self.mask = np.uint8(out_mask*255);	
+		if self.doProfile:
+			print "Saliency cut : ",time.time()-start_time
+			
+	def performSaliency(self):
+		raise NotImplementedError;
+		
+	"""
+		Process the given input frame
+	"""
+	def process(self,cur_frame):
+		self.quantize(cur_frame)		# sets self.q_frame
+		self.build_region()				# sets self.color,self.mean,self,freq
+		self.performSaliency();			# sets self.saliency
+		self.saliency_cut()				# sets self.mask
+		zero = np.zeros(self.mask.shape,np.uint8);
+		return np.dstack((zero,zero,self.mask))
+	
