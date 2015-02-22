@@ -6,7 +6,7 @@ from scipy.spatial.distance import pdist,squareform
 
 class ColorFrequency(Saliency):
 	def __init__(self,properties):
-		self.weights = [0.5,0.4,0.3,0.2,0.1,0.05,0.03,0.01]
+		self.weights = [0.5]
 		super(ColorFrequency, self).__init__(properties);
 		self.method = "cf"
 		
@@ -21,9 +21,10 @@ class ColorFrequency(Saliency):
 			allp_dist = np.exp(-_allp_dist/(_norm*dist_weight));
 			norm_dist=1/np.sum(allp_dist,1)
 			avg_color = np.dot(allp_dist*norm_dist[:,None],_color)
-			saliency = np.linalg.norm(_color - avg_color,axis=1)*np.sqrt(prev_saliency)
+			saliency = np.linalg.norm(_color - avg_color,axis=1)#*np.sqrt(prev_saliency)
 			saliency = saliency/(np.max(saliency))
 			indices = saliency<0.1; _color[indices,:] = np.zeros(self.data.shape[1]);
+			indices = saliency>0.9; _color[indices,:] = np.zeros(self.data.shape[1]);
 			prev_saliency=saliency; prev_saliency[saliency<0.1]=0
 		self.saliency  = sum([np.where(self.regions==region,255*saliency[region],0)
 								for region in range(self.num_regions)],0)

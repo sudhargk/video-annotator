@@ -6,7 +6,7 @@ from scipy.spatial.distance import pdist,squareform
 
 class ContextAware(Saliency):
 	def __init__(self, properties):
-		self.weights = [0.5,0.4,0.3,0.2,0.1,0.05,0.03,0.01]
+		self.weights = [0.03,0.05,0.1]
 		super(ContextAware, self).__init__(properties);
 		self.method = "ca"
 		
@@ -22,7 +22,9 @@ class ContextAware(Saliency):
 			allp_dist = np.exp(-_allp_dist/(_norm*dist_weight));
 			norm_dist=1/np.sum(allp_dist,1)
 			_saliency = np.sum(np.dot(allp_dist*norm_dist[:,None],allp_col_dist),1)
-			_saliency=normalize(_saliency); saliency += (1 - np.exp(-_saliency));	
+			_saliency=normalize(_saliency); saliency += _saliency/np.sqrt(dist_weight);
+		saliency = normalize(saliency)
+		self.saliency = 1 - np.exp(-saliency)
 		self.saliency  = sum([np.where(self.regions==region,255*saliency[region],0)
 								for region in range(self.num_regions)],0)
 		self.saliency = np.uint8(self.saliency);

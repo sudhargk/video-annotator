@@ -7,7 +7,7 @@ from scipy.spatial.distance import pdist,squareform
 class RegionContrast(Saliency):
 	def __init__(self, properties):
 		self.color_weight = 0.05;
-		self.dist_weight = 0.125
+		self.dist_weight = 0.45
 		super(RegionContrast, self).__init__(properties);
 		self.method = "rc"
 		

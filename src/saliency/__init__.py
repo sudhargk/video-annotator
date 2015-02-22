@@ -9,7 +9,7 @@ from utils import mkdirs
 """
 	Factory method for different saliency methdds.
 	Args :
-		method : Repressents different saliency method, 
+		method (int) : Repressents different saliency method, 
 					method = 1, Color frequency based
 					method = 2, Context aware based
 					method = 3, Region Contrast based
@@ -35,16 +35,28 @@ def buildSaliency(method,props):
 		return SpectralDistribution(props);
 	else :
 		raise NotImplementedError;
-		
+	
 class SaliencyMethods(object):
 	COLOR_FREQUENCY = 1;
 	CONTEXT_AWARE = 2;
 	REGION_CONTRAST = 3; 
 	SPECTRAL_DISTRIBUTION =4
-			
+
+"""
+	Saliency Properties (__init___)
+	Args :
+		num_superpxiels (int): number of slic pixels, default 400,
+		compactness (int): slic compactness, default 40
+		threshold (float): threshold used on saliency, default 0.7,
+		doProfile (bool): allow profiling default False,
+		useLAB (bool): use LAB features, default True,
+		useColor (bool): use color features, default True,
+		useTexture (bool) : use texture features, default False,
+		doCUT (bool) : perform grab cut operations, default False,
+"""			
 class SaliencyProps(object):
-	def __init__(self, num_superpixels = 400,compactness = 40, threshold =0.7, doProfile = True,
-						useLAB=True,useColor=True,useTexture=True,doCUT=True):
+	def __init__(self, num_superpixels = 400,compactness = 40, threshold = 0.6, doProfile = False,
+						useLAB=True,useColor=True,useTexture=False,doCUT=True):
 		self.num_superpixels = num_superpixels
 		self.compactness = compactness
 		self.doProfile = doProfile;
@@ -65,6 +77,8 @@ class Saliency(object):
 			
 	""" 
 		Quantization of all colors using histogram equalization
+		Args :
+			do_equalize (bool) : perform color equalization
 	"""
 	def quantize (self,cur_frame,do_equalize=True):
 		start_time = time.time();
@@ -79,6 +93,8 @@ class Saliency(object):
 			
 	"""
 		Extract Color properties either LAB color or RGB color
+		Returns :
+			Color properties
 	"""
 	def extract_color(self):
 		if self.props.useLAB:
@@ -93,6 +109,8 @@ class Saliency(object):
 		
 	"""
 		Extract GLCM based texture property
+		Returns :
+			Texture properties
 	"""
 	def extract_texture(self):
 		gray_frame = cv2.cvtColor(self.q_frame,cv2.COLOR_RGB2GRAY)
@@ -139,21 +157,27 @@ class Saliency(object):
 	"""
 	def saliency_cut(self,
 			scale_l = np.array([[0,0],[0.25,0],[0,0.25],[0.25,0.25],[0.125,0.125]]),
-			scale_u = np.array([[0.75,0.75],[1,0.75],[0.75,1],[1,1],[0.875,0.875]])):
+			scale_u = np.array([[0.75,0.75],[1,0.75],[0.75,1],[1,1],[0.875,0.875]]),
+			max_iter = 2):
 		start_time = time.time();
 		_,self.mask = cv2.threshold(self.saliency,self.props.threshold*255,1,cv2.THRESH_BINARY)
 		if self.props.doCUT:
 			scale_l = np.array(scale_l * self.shape[0],np.uint);
 			scale_u = np.array(scale_u * self.shape[1],np.uint);
 			rect = np.hstack((scale_l,scale_u));
+			kernel = np.ones((4,4),np.uint8)
 			bgdModel = np.zeros((1,65),np.float64); fgdModel = np.zeros((1,65),np.float64)
 			out_mask = np.zeros(self.shape[:2],np.bool);
-			for idx in range(rect.__len__()):
+			for iter in range(max_iter):
 				in_mask = np.uint8(self.mask.copy());
-				cv2.grabCut(self.q_frame,in_mask,tuple(rect[idx,:]),bgdModel,fgdModel,2,cv2.GC_INIT_WITH_MASK)
-				out_mask = out_mask|np.where((in_mask==0)|(in_mask==2),False,True)
-				self.mask = out_mask
-		self.mask = np.uint8(self.mask*255);	
+				for idx in range(rect.__len__()):
+					cv2.grabCut(self.q_frame,in_mask,tuple(rect[idx,:]),bgdModel,fgdModel,1,cv2.GC_INIT_WITH_MASK)
+					out_mask = out_mask|np.where((in_mask==0)|(in_mask==2),False,True)
+					self.mask = np.uint8(out_mask)
+				self.mask = cv2.morphologyEx(self.mask, cv2.MORPH_CLOSE, kernel)
+				self.mask = cv2.morphologyEx(self.mask, cv2.MORPH_OPEN, kernel)
+				
+		self.mask = np.uint8(self.mask*255);
 		if self.props.doProfile:
 			print "Saliency cut : ",time.time()-start_time
 			
