@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
-
-
+from io_module.video_reader import VideoReader
+from io_module.video_writer import VideoWriter
 #A box r inside the other box q
 def inside(r, q):
 	rx, ry, rw, rh = r
@@ -16,24 +16,19 @@ def draw_detections(img, rects, thickness = 1,shrinkage = 0.05):
 		pad_w, pad_h = int(shrinkage*w), int(shrinkage*h)
 		cv2.rectangle(img, (x+pad_w, y+pad_h), (x+w-pad_w, y+h-pad_h), (0, 255, 0), thickness)
 
-def tracker(path):
+def tracker(inPath,outPath="test_results/tracker.avi"):
 	#initialization for default value
-	if path=='0':
-		path=0;
-	
 	hog = cv2.HOGDescriptor()
 	hog.setSVMDetector( cv2.HOGDescriptor_getDefaultPeopleDetector())
-	
-	
-	cap = cv2.VideoCapture(path)
-	w = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)); h = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-	fourcc = cv2.cv.CV_FOURCC(*'XVID')
-	vidout = cv2.VideoWriter('out.avi',fourcc,20,(w,h))
-	
-	print "Perform human tracking"
-	while(cap.isOpened()):
-		ret, cur_frame = cap.read()
-		if not ret:
+	vidreader = VideoReader(inPath)
+	vidwriter = VideoWriter(outPath,vidreader.width,vidreader.height)
+	vidwriter.build();
+	frame_idx =0; N = vidreader.frames;
+	while vidreader.num_remaining_frames() > 0:
+		frame_idx += 1;
+		cur_frame = vidreader.read_next();
+		print 'Perform human tracking.... {0}%\r'.format((frame_idx*100/N)),
+		if cur_frame is None:
 			break;
 		gray_cur_frame = cv2.cvtColor(cur_frame, cv2.COLOR_BGR2GRAY)
 		found, w = hog.detectMultiScale(gray_cur_frame, winStride=(8,8), padding=(32,32), scale=1.05)
@@ -45,15 +40,19 @@ def tracker(path):
 					break
 				else:
 					found_filtered.append(r)
-		
 		draw_detections(cur_frame, found_filtered, 1)
-		vidout.write(cur_frame);
-		
-	
-	cap.release();
-	vidout.release()
+		vidwriter.write(cur_frame);
+	vidreader.close();
+	vidwriter.close()
 	cv2.destroyAllWindows()
+	print "Implemented Human Tracking.............   [Done]"
 	
 if __name__ == "__main__":
 	import sys;
-	tracker(sys.argv[1]);
+	_len = sys.argv.__len__()
+	if _len == 1:
+		raise NotEmptyError("Atleast one arguments must be provided")
+	elif _len == 2:
+		tracker(sys.argv[1])
+	elif _len >= 3:
+		tracker(sys.argv[1],sys.argv[2])	
