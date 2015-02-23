@@ -35,7 +35,7 @@ class BGSubtractionImpl(object):
 	def frame_differencing(self,prev_frame,cur_frame,threshold_value=100):
 		diff = cv2.subtract(cur_frame,prev_frame);
 		diff = cv2.cvtColor(diff,cv2.COLOR_BGR2GRAY)
-		_,diff = cv2.threshold(diff,threshold_value,1,cv2.THRESH_BINARY);
+		_,diff = cv2.threshold(diff,threshold_value,1,cv2.THRESH_BINARY)
 		return diff	
 
 

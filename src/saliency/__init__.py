@@ -20,7 +20,7 @@ from utils import mkdirs
 	Raises:
 		NotImplementedError : if method value is not valid
 """
-def buildSaliency(method,props):
+def get_instance(method,props):
 	if method == SaliencyMethods.COLOR_FREQUENCY:
 		from saliency.color_frequency import ColorFrequency
 		return ColorFrequency(props);
@@ -165,7 +165,7 @@ class Saliency(object):
 			scale_l = np.array(scale_l * self.shape[0],np.uint);
 			scale_u = np.array(scale_u * self.shape[1],np.uint);
 			rect = np.hstack((scale_l,scale_u));
-			kernel = np.ones((4,4),np.uint8)
+			kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(3,3))
 			bgdModel = np.zeros((1,65),np.float64); fgdModel = np.zeros((1,65),np.float64)
 			out_mask = np.zeros(self.shape[:2],np.bool);
 			for iter in range(max_iter):
