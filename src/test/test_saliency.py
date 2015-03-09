@@ -1,6 +1,10 @@
 import cv2,sys,os
+import numpy as np
 from saliency import get_instance,SaliencyProps,SaliencyMethods
 def overlay_write(_input,mask_frame,filename):
+	zero = np.zeros(mask_frame.shape,np.uint8);
+	mask_frame = np.uint8(mask_frame*255);
+	mask_frame = np.dstack((zero,zero,mask_frame))
 	out_frame = cv2.addWeighted(_input,0.4,mask_frame,0.6,0.0);
 	cv2.imwrite(filename,out_frame);
 	

@@ -1,4 +1,5 @@
-import cv2
+import cv2,types
+from utils import normalize
 import numpy as np
 """
 	Factory method for generating instance of background subtraction technique
@@ -16,6 +17,7 @@ import numpy as np
 		Not Implemented error
 """
 def get_instance(method,_nextFrame):
+	assert(isinstance(_nextFrame, types.FunctionType) or isinstance(_nextFrame, types.MethodType))
 	if method == BGMethods.FRAME_DIFFERENCING:
 		from bg_sub.frame_difference import FrameDifferencingImpl
 		return FrameDifferencingImpl(_nextFrame);
@@ -70,6 +72,8 @@ class BGSubtractionImpl(object):
 	"""
 	def frame_differencing(self,prev_frame,cur_frame,threshold=100):
 		diff = cv2.absdiff(cur_frame,prev_frame);
-		diff = cv2.cvtColor(diff,cv2.COLOR_BGR2GRAY)
+		if diff.ndim==3:	#color input
+			diff = cv2.cvtColor(diff,cv2.COLOR_BGR2GRAY)
+		self.variation = normalize(np.float32(diff));
 		_,diff = cv2.threshold(diff,threshold,1,cv2.THRESH_BINARY)
 		return diff	

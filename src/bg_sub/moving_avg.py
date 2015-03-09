@@ -7,11 +7,11 @@ from bg_sub import BGSubtractionImpl
 	Args:
 		alpha (float) : values [0-1] specifies the importance to current frame, default 0.3
 		threshold (int) : values [0-256] integer threshold on difference between foreground 
-					and background, default = 50
+					and background, default = 10
 	
 """
 class MovingAvgImpl(BGSubtractionImpl):
-	def __init__(self,_nextFrame,alpha=0.3,threshold=50):
+	def __init__(self,_nextFrame,alpha=0.6,threshold=10):
 		super(MovingAvgImpl,self).__init__(_nextFrame)
 		self.prev_frame = None
 		self.cur_frame = None
@@ -25,7 +25,8 @@ class MovingAvgImpl(BGSubtractionImpl):
 		if self.cur_frame is None:
 			self.finish = True
 		else:
-			cv2.accumulateWeighted(np.float32(self.cur_frame),np.float32(self.prev_frame),self.alpha,None)
+			self.prev_frame = np.float32(self.prev_frame)
+			cv2.accumulateWeighted(np.float32(self.cur_frame),self.prev_frame,self.alpha,None)
 			self.prev_frame = cv2.convertScaleAbs(self.prev_frame)
 			diff = self.frame_differencing(self.prev_frame,self.cur_frame,self.threshold)
 			return diff;

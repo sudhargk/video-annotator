@@ -6,7 +6,7 @@ from scipy.spatial.distance import pdist,squareform
 
 class ColorFrequency(Saliency):
 	def __init__(self,properties):
-		self.weights = [0.5]
+		self.weights = [0.2,0.1]
 		super(ColorFrequency, self).__init__(properties);
 		self.method = "cf"
 		
@@ -24,11 +24,10 @@ class ColorFrequency(Saliency):
 			saliency = np.linalg.norm(_color - avg_color,axis=1)#*np.sqrt(prev_saliency)
 			saliency = saliency/(np.max(saliency))
 			indices = saliency<0.1; _color[indices,:] = np.zeros(self.data.shape[1]);
-			indices = saliency>0.9; _color[indices,:] = np.zeros(self.data.shape[1]);
+			#indices = saliency>0.9; _color[indices,:] = np.zeros(self.data.shape[1]);
 			prev_saliency=saliency; prev_saliency[saliency<0.1]=0
-		self.saliency  = sum([np.where(self.regions==region,255*saliency[region],0)
+		self.saliency  = sum([np.where(self.regions==region,saliency[region],0)
 								for region in range(self.num_regions)],0)
-		self.saliency = np.uint8(self.saliency);
 		if self.props.doProfile:
-			cv2.imwrite(self.PROFILE_PATH+self.method+'_p.png',self.saliency);
+			cv2.imwrite(self.PROFILE_PATH+self.method+'_p.png',np.uint8(self.saliency*255));
 			print "Freq Tuning (preprocess) : ",time.time()-start_time	

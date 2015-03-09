@@ -9,7 +9,7 @@ from bg_sub import BGSubtractionImpl
 					and background, default = 50
 """
 class BackgroundSubtractorGMGImpl(BGSubtractionImpl):
-	def __init__(self,_nextFrame,threshold=50):
+	def __init__(self,_nextFrame,threshold=20):
 		super(BackgroundSubtractorGMGImpl,self).__init__(_nextFrame)
 		self.kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(3,3))
 		self.fgbg = cv2.BackgroundSubtractorMOG2()

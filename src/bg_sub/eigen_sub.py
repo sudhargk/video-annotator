@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+
 from bg_sub import BGSubtractionImpl
 """
 	A  background subtraction based on eigen subtraction
@@ -11,7 +12,7 @@ from bg_sub import BGSubtractionImpl
 """
 
 class EigenBGSubImpl(BGSubtractionImpl):
-	def __init__(self,_nextFrame,N=4,K=2,threshold=10):
+	def __init__(self,_nextFrame,N=4,K=2,threshold=50):
 		super(EigenBGSubImpl,self).__init__(_nextFrame)
 		self.prev_frames = []
 		self.shape = None
@@ -20,10 +21,12 @@ class EigenBGSubImpl(BGSubtractionImpl):
 		self.K = K
 		self.threshold = threshold
 	
-	def frame_differencing(self,prev_frame,cur_frame,threshold=10):
+	"""
+	def frame_differencing(self,prev_frame,cur_frame,threshold=50):
 		diff = cv2.absdiff(cur_frame,prev_frame);
 		_,diff = cv2.threshold(diff,threshold,1,cv2.THRESH_BINARY);
 		return diff	
+	"""
 	
 	def process(self):
 		while self.prev_frames.__len__() < self.N:					# load N prev_frames
