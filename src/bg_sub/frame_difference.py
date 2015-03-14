@@ -16,6 +16,7 @@ class FrameDifferencingImpl(BGSubtractionImpl):
 	def process(self):
 		if self.prev_frame is None:
 			self.prev_frame = self._nextFrame()
+			
 		self.cur_frame = self._nextFrame()
 		if self.cur_frame is None:
 			self.finish = True

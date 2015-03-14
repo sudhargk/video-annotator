@@ -11,6 +11,7 @@ from skimage.measure import label
 from scipy.spatial.distance import pdist,squareform
 from utils import mkdirs
 from scipy import ndimage
+from utils import normalize
 
 """
 	Factory method for different saliency methdds.
@@ -61,8 +62,8 @@ class SaliencyMethods(object):
 		doCUT (bool) : perform grab cut operations, default False,
 """			
 class SaliencyProps(object):
-	def __init__(self, num_superpixels = 400,compactness = 40, threshold = 0.5, doProfile = False,
-						useLAB=True,useColor=True,useTexture=False,doCUT=True):
+	def __init__(self, num_superpixels = 400,compactness = 40, threshold = 0.8, doProfile = False,
+						useLAB=True,useColor=True,useTexture=True,doCUT=True):
 		self.num_superpixels = num_superpixels
 		self.compactness = compactness
 		self.doProfile = doProfile;
@@ -119,7 +120,8 @@ class Saliency(object):
 			Texture properties
 	"""
 	def extract_texture(self):
-		gray_frame = cv2.cvtColor(self.q_frame,cv2.COLOR_RGB2GRAY)
+		gray = cv2.cvtColor(self.q_frame,cv2.COLOR_RGB2GRAY)
+		"""
 		def texture_prop(region,patch_size = 2):
 			_mean_min = self.mean[region]-patch_size;
 			_mean_max = self.mean[region]+patch_size;
@@ -129,6 +131,16 @@ class Saliency(object):
 			_cor = greycoprops(glcm, 'correlation')[0, 0];
 			return (_dis,_cor);
 		texture_data = np.array([texture_prop(region) for region in range(self.num_regions)])
+		"""
+		eigen = cv2.cornerEigenValsAndVecs(gray,15,3);
+		eigen = eigen.reshape(gray.shape[0], gray.shape[1], 3, 2)
+		texture_mag = normalize(np.sqrt(eigen[:,:,0,0]**2 +  eigen[:,:,0,1]**2))
+		texture_dir1 = normalize(np.arctan2(eigen[:,:,1,1],eigen[:,:,1,0]))
+		texture_dir2 = normalize(np.arctan2(eigen[:,:,2,1],eigen[:,:,2,0]))
+		texture_prop  = np.dstack((texture_mag,texture_dir1,texture_dir1));
+		texture_data = np.array([np.sum(texture_prop[np.where(self.regions==region)],0)
+											for region in range(self.num_regions)])
+		_inv_freq = 1/(self.freq+0.0000001); texture_data = texture_data*_inv_freq[:,None]
 		return texture_data
 		
 	"""
@@ -166,6 +178,7 @@ class Saliency(object):
 		start_time = time.time();
 		self.saliency = np.float32(self.saliency);
 		_,self.mask = cv2.threshold(self.saliency,self.props.threshold,1,cv2.THRESH_BINARY)
+		self.mask = np.uint8(self.mask)
 		"""
 		labels = (self.regions+1)*self.mask
 		_input = cv2.GaussianBlur(self.s_frame*self.mask[:,:,None],(5,5),2)

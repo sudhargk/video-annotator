@@ -16,6 +16,7 @@ class VideoReader(object):
 				return frame
 			return None
 		
+		
 	def skip_frames (self,num_frames=0):
 		frame = None;
 		while(num_frames>0):
@@ -25,6 +26,11 @@ class VideoReader(object):
 	
 	def num_remaining_frames(self):
 		return self.frames - self.read_frames;
+	
+	
+	def has_next(self):
+		return self.num_remaining_frames()>0;
+	
 	
 	def close(self):
 		self.cap.release();

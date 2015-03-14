@@ -5,7 +5,21 @@ import os,errno
 """
 def normalize(_input):
 	_max = np.max(_input); _min = np.min(_input)
-	return np.float32((_input-_min)/(_max-_min));
+	return (_input-_min)/np.float32((_max-_min));
+	
+
+"""
+	Normalizes matrix along column or row
+		axis = 0 across column,
+		axis = 1 across row
+"""
+def normalize2D(_input,axis):
+	assert((axis==1)|(axis==0))
+	_max = np.max(_input,axis); _min = np.min(_input,axis)
+	if (axis==0):
+		return (_input-_min)/np.float32((_max-_min));
+	else:
+		return (_input-_min[:,None])/np.float32((_max-_min)[:,None]);
 
 """
 	Computes the pairwise euclidean distance across every pair of vector in A & B
