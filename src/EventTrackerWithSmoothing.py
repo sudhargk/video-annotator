@@ -19,9 +19,11 @@ def process_next_block(vidreader,sal_rc,blockSize=4):
 
 def write_block(vidwriter,frames,newMasks,oldMasks,mask_frame):
 	for (frame,newMask,oldMask) in zip(frames,newMasks,oldMasks):
+		mask_frame[:,:,2] = np.float32(oldMask*255);
+		out_frame1 = cv2.addWeighted(np.float32(frame),0.6,mask_frame,0.4,0.0);
 		mask_frame[:,:,2] = np.float32(newMask*255);
-		mask_frame[:,:,1] = np.float32(oldMask*255);
-		out_frame = cv2.addWeighted(np.float32(frame),0.6,mask_frame,0.4,0.0);
+		out_frame2 = cv2.addWeighted(np.float32(frame),0.6,mask_frame,0.4,0.0);
+		out_frame = np.hstack((out_frame1,out_frame2))
 		vidwriter.write(np.uint8(out_frame))
 
 def process(vidreader,vidwriter,batch=4):
@@ -57,5 +59,5 @@ if __name__ == "__main__":
 		inp = sys.argv[1];
 		out = "test_results/final.avi";
 		vidreader = VideoReader(inp)
-		vidwriter = VideoWriter(out,vidreader.width,vidreader.height)
+		vidwriter = VideoWriter(out,2*vidreader.width,vidreader.height)
 		process(vidreader,vidwriter)

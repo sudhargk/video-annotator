@@ -10,7 +10,7 @@ from utils import normalize
 		numVectors (int) : number of eigen direction, must be less than number of features dimension
 		threshod (0.8) : threshold for each frame
 """
-def get_instance(_feats, numVectors = 2,threshold=0.7):
+def get_instance(_feats, numVectors = 4,threshold=0.8):
 	return Smoothing(_feats, numVectors,threshold);
 
 class Smoothing(object):	

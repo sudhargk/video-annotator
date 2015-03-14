@@ -1,0 +1,23 @@
+# Temporary & Compiled Sources #
+###################
+*.pyc
+*.py~
+*.o
+*.pyx~
+*.*~
+
+ 
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.gz
+*.zip
+*.tgz
+*.bz
+
+# OutputFile #
+################
+src/test_results
+*.avi
