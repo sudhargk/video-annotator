@@ -29,7 +29,7 @@ def write_block(vidwriter,frames,newMasks,oldMasks,mask_frame):
 def process(vidreader,vidwriter,batch=4):
 	vidwriter.build();
 	sal_rc = sal_instance(SaliencyMethods.REGION_CONTRAST,SaliencyProps())	
-	smoothner = smooth_instance(feats);	
+	smoothner = smooth_instance(feats,0);	
 	frame_idx = 0; N = vidreader.frames;
 	batchsize = batch * 2
 	_frames = []; _masks = [];

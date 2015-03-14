@@ -1,44 +1,30 @@
 import numpy as np
 from cv2 import resize
 from utils import normalize
-
+SMOOTHING_EIGEN_BASED = 0
+SMOOTHING_GMM_BASED = 1
 """
 	Perfrom tempral smoothing of mask obtained on each frame
 	Args:
-		_maskFn (function) : mask function
 		_feats  (function) : feature extraction function
 		numVectors (int) : number of eigen direction, must be less than number of features dimension
-		threshod (0.8) : threshold for each frame
+		method (int) : method = 0, then eigen based method
+					   method = 1 then gmm based method , 
+					   ellse Raise exception
 """
-def get_instance(_feats, numVectors = 4,threshold=0.8):
-	return Smoothing(_feats, numVectors,threshold);
-
+def get_instance(_feats,method):
+	if method == SMOOTHING_EIGEN_BASED:
+		from smoothing.eigen_based import EigenBased as Smoothner
+		return Smoothner(_feats);
+	elif method == SMOOTHING_GMM_BASED:
+		from smoothing.eigen_based import GMMBased as Smoothner
+		return Smoothner(_feats);
+	else:
+		raise NotImplementedError;
+		
 class Smoothing(object):	
-	def __init__(self,_feats, numVectors = 1,threshold=0.8):
-		self.feats = _feats;
-		self.numVectors =  numVectors
-		self.threshold = threshold
-	
-	"""
-		Computes eigen vetors based on the mask frams
-	"""	
-	def __computeEigenVec__(self,mask_feats):
-		mean = np.mean(mask_feats,axis=0)
-		mask_feats = mask_feats-mean;	#mean subtraction
-		eigv,eigt = np.linalg.eig(np.cov(mask_feats,rowvar=0));
-		eigt = eigt[:,np.argsort(eigv)[::-1]]
-		return (eigt[:self.numVectors,:],mean)
-	
-	"""
-		Computes the new mask for give frame, based on threshold
-	"""
-	def __computeNewMask__(self,frame_feat,shape,eigt,mean):
-		print frame_feat.shape
-		assert(shape[0]*shape[1] == frame_feat.__len__())
-		frames_confidence = normalize(np.sum(np.dot(frame_feat-mean,eigt.transpose()),1))
-		frames_mask =  (frames_confidence>self.threshold).reshape((shape[0],shape[1]))
-		return frames_mask;
-	
+	def __init__(self,_feats):
+		self.feats = _feats
 	"""
 		Performs smoothing on list of frames,
 		Args:
@@ -49,21 +35,4 @@ class Smoothing(object):
 			new mask for all smoothFrames.
 	"""	
 	def process(self,blocks,masks,smoothFrames=None):
-		numBlocks = blocks.__len__();
-		assert(numBlocks>0)
-		shape = blocks[0].shape;	frameSize = np.prod(shape[:2])
-		blockFeats = np.vstack([self.feats(block) for block in blocks])
-		blockMask = np.hstack([mask.flatten() for mask in masks])
-		print blockMask.shape,np.sum(blockMask==1)
-		(eigt,mean) = self.__computeEigenVec__(blockFeats[blockMask==1,:])
-		if smoothFrames is None:
-			smoothFrames = range(numBlocks);
-		else:
-			smoothFrames = [idx for idx in smoothFrames if idx < numBlocks];
-		newMasks = [self.__computeNewMask__(blockFeats[frameIdx*frameSize:(frameIdx+1)*frameSize],shape,eigt,mean) 
-							for frameIdx in smoothFrames]
-		return newMasks
-		
-		
-
-	
+		raise NotImplementedError;
