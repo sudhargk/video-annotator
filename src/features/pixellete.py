@@ -10,6 +10,7 @@ from utils import normalize2D
 def texture(image):
 	imageDim = np.prod(image.shape[:2])
 	return eigenBasedFeats(image).reshape(imageDim,3);
+
 	
 """
 	Extract color based feats returns LAB and YUV (6 dimension)
@@ -19,7 +20,8 @@ def color(image):
 	_rgb = image.reshape(imageDim,3)
 	_lab = LAB(image).reshape(imageDim,3);
 	_yuv = YUV(image).reshape(imageDim,3);
-	_color = np.hstack((_rgb,_lab,_yuv));
+	_color = np.hstack((_lab,_yuv));
+	#_color = _rgb
 	return _color
 
 """
@@ -44,10 +46,10 @@ def gradient(image,bin_n=16):
 """
 def allFeats(image):
 	_color = color(image);
-	#_texture = texture(image);
-	#_position = position(image);
+	_texture = texture(image);
+	_position = position(image);
 	#_grad = gradient(image);
-	allFeats = _color
-	#allFeats = np.hstack((_color,_position))
+	#allFeats = _color
+	allFeats = np.hstack((_color,_texture))
 	#allFeats = np.hstack((_color,_grad,_texture))
 	return normalize2D(allFeats,0);

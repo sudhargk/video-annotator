@@ -6,16 +6,18 @@ from smoothing import get_instance as smooth_instance
 from features.pixellete import allFeats as feats
 
 def process_next_block(vidreader,sal_rc,blockSize=4):
-	frameCnt = 0;	blocks = []; mask_blocks = [];
+	frameCnt = 0;	blocks = []; bg_mask_blocks = [];	fg_mask_blocks = [];
 	while(frameCnt < blockSize):
 		if vidreader.has_next():
 			frameCnt += 1
 			frame = vidreader.read_next();
 			blocks.append(np.array(frame,dtype=np.uint8))
-			mask_blocks.append(sal_rc.process(frame));
+			sal_rc.process(frame)
+			bg_mask_blocks.append(sal_rc.bgmask);
+			fg_mask_blocks.append(sal_rc.mask);
 		else:
 			break;
-	return (frameCnt,blocks,mask_blocks);
+	return (frameCnt,blocks,fg_mask_blocks,bg_mask_blocks);
 
 def write_block(vidwriter,frames,newMasks,oldMasks,mask_frame):
 	for (frame,newMask,oldMask) in zip(frames,newMasks,oldMasks):
@@ -32,19 +34,19 @@ def process(vidreader,vidwriter,batch=4):
 	smoothner = smooth_instance(feats,0);	
 	frame_idx = 0; N = vidreader.frames;
 	batchsize = batch * 2
-	_frames = []; _masks = [];
+	_frames = []; _fgmasks = []; _bgmasks = [];
 	mask_frame  = np.zeros((vidreader.height,vidreader.width,3),dtype=np.float32);
 	while(vidreader.has_next()):
 		#print 'Proceesing ... {0}%\r'.format((frame_idx*100/N)),
-		(cnt,frames,masks) = process_next_block(vidreader,sal_rc,batchsize);
+		(cnt,frames,fgmasks,bgmasks) = process_next_block(vidreader,sal_rc,batchsize);
 		if cnt > 0:
 			frame_idx += cnt;
-			_frames.extend(frames); _masks.extend(masks);
-			newMasks = smoothner.process(_frames,_masks,range(batch/2,3*batch/2));
+			_frames.extend(frames); _fgmasks.extend(fgmasks); _bgmasks.extend(bgmasks);
+			newMasks = smoothner.process(_frames,_fgmasks,_bgmasks,range(batch/2,3*batch/2));
 			curblockFrames = _frames[batch/2:batch/2+newMasks.__len__()]
-			oldMasks = _masks[batch/2:batch/2+newMasks.__len__()]
+			oldMasks = _fgmasks[batch/2:batch/2+newMasks.__len__()]
 			write_block(vidwriter,curblockFrames,newMasks,oldMasks,mask_frame);
-			_frames = _frames[batch:];_masks = _masks[batch:]
+			_frames = _frames[batch:];_fgmasks = _fgmasks[batch:]; _bgmasks = _bgmasks[batch:];
 		else:
 			break;
 		batchsize = batch;

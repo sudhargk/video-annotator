@@ -17,7 +17,7 @@ def get_instance(_feats,method):
 		from smoothing.eigen_based import EigenBased as Smoothner
 		return Smoothner(_feats);
 	elif method == SMOOTHING_GMM_BASED:
-		from smoothing.eigen_based import GMMBased as Smoothner
+		from smoothing.gmm_based import GMMBased as Smoothner
 		return Smoothner(_feats);
 	else:
 		raise NotImplementedError;

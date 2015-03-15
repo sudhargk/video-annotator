@@ -179,6 +179,8 @@ class Saliency(object):
 		self.saliency = np.float32(self.saliency);
 		_,self.mask = cv2.threshold(self.saliency,self.props.threshold,1,cv2.THRESH_BINARY)
 		self.mask = np.uint8(self.mask)
+		_,self.bgmask = cv2.threshold(self.saliency,0.4,1,cv2.THRESH_BINARY_INV)
+		self.bgmask = np.uint8(self.bgmask)
 		"""
 		labels = (self.regions+1)*self.mask
 		_input = cv2.GaussianBlur(self.s_frame*self.mask[:,:,None],(5,5),2)
