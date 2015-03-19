@@ -3,6 +3,7 @@ from cv2 import resize
 from utils import normalize
 SMOOTHING_EIGEN_BASED = 0
 SMOOTHING_GMM_BASED = 1
+SMOOTHING_SSL_BASED = 2
 """
 	Perfrom tempral smoothing of mask obtained on each frame
 	Args:
@@ -18,6 +19,9 @@ def get_instance(_feats,method):
 		return Smoothner(_feats);
 	elif method == SMOOTHING_GMM_BASED:
 		from smoothing.gmm_based import GMMBased as Smoothner
+		return Smoothner(_feats);
+	elif method == SMOOTHING_SSL_BASED:
+		from smoothing.ssl_based import SSLBased as Smoothner
 		return Smoothner(_feats);
 	else:
 		raise NotImplementedError;

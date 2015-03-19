@@ -18,10 +18,10 @@ def texture(image):
 def color(image):
 	imageDim = np.prod(image.shape[:2])
 	_rgb = image.reshape(imageDim,3)
-	_lab = LAB(image).reshape(imageDim,3);
-	_yuv = YUV(image).reshape(imageDim,3);
-	_color = np.hstack((_lab,_yuv));
-	#_color = _rgb
+	#_lab = LAB(image).reshape(imageDim,3);
+	#_yuv = YUV(image).reshape(imageDim,3);
+	#_color = np.hstack((_lab,_yuv));
+	_color = _rgb
 	return _color
 
 """
@@ -50,6 +50,6 @@ def allFeats(image):
 	_position = position(image);
 	#_grad = gradient(image);
 	#allFeats = _color
-	allFeats = np.hstack((_color,_texture))
+	allFeats = np.hstack((_color,_texture,_position))
 	#allFeats = np.hstack((_color,_grad,_texture))
 	return normalize2D(allFeats,0);

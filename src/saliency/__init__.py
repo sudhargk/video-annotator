@@ -63,7 +63,7 @@ class SaliencyMethods(object):
 """			
 class SaliencyProps(object):
 	def __init__(self, num_superpixels = 400,compactness = 40, threshold = 0.8, doProfile = False,
-						useLAB=True,useColor=True,useTexture=True,doCUT=True):
+						useLAB=True,useColor=True,useTexture=False,doCUT=True):
 		self.num_superpixels = num_superpixels
 		self.compactness = compactness
 		self.doProfile = doProfile;
@@ -179,7 +179,7 @@ class Saliency(object):
 		self.saliency = np.float32(self.saliency);
 		_,self.mask = cv2.threshold(self.saliency,self.props.threshold,1,cv2.THRESH_BINARY)
 		self.mask = np.uint8(self.mask)
-		_,self.bgmask = cv2.threshold(self.saliency,0.4,1,cv2.THRESH_BINARY_INV)
+		_,self.bgmask = cv2.threshold(self.saliency,0.2,1,cv2.THRESH_BINARY_INV)
 		self.bgmask = np.uint8(self.bgmask)
 		"""
 		labels = (self.regions+1)*self.mask
