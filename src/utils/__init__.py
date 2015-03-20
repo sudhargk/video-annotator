@@ -1,11 +1,12 @@
 import numpy as np
 import os,errno
+APPROX_ZERO = 0.0000001
 """
 	Normalizes the _input vector/matrix based on maximum and minimum value
 """
 def normalize(_input):
 	_max = np.max(_input); _min = np.min(_input)
-	return (_input-_min)/np.float32((_max-_min));
+	return (_input-_min)/np.float32((_max-_min+APPROX_ZERO));
 	
 
 """
@@ -19,14 +20,14 @@ def normalize2D(_input,axis):
 	if (axis==0):
 		return (_input-_min)/np.float32((_max-_min));
 	else:
-		return (_input-_min[:,None])/np.float32((_max-_min)[:,None]);
+		return (_input-_min[:,None])/np.float32((_max-_min+APPROX_ZERO)[:,None]);
 
 """
 	Computes the pairwise euclidean distance across every pair of vector in A & B
 """
 def pdist2(A,B):
-	A_2 = np.outer(np.sum(np.square(A),1),np.ones(A.shape[0]))
-	B_2 = np.outer(np.ones(B.shape[0]),np.sum(np.square(B),1))
+	A_2 = np.outer(np.sum(np.square(A),1),np.ones(B.shape[0]))
+	B_2 = np.outer(np.ones(A.shape[0]),np.sum(np.square(B),1))
 	AoutB = np.dot(A,B.transpose())
 	return np.sqrt(A_2 + B_2 - 2*AoutB)
 
