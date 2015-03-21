@@ -1,0 +1,246 @@
+\documentclass[MTech]{iitmdiss}
+
+\usepackage{times}
+\usepackage{epsf}
+\usepackage{threeparttable}
+\usepackage{setspace}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{txfonts,pxfonts,amsfonts}
+\usepackage{epsfig}
+\usepackage{caption}
+\usepackage{subfig}
+\usepackage[dvips]{graphicx}
+% \usepackage[square,numbers,sort]{natbib}
+\usepackage[square]{natbib}
+\usepackage[hypertex]{hyperref} % hyperlinks for references.
+%\usepackage{algorithmic}
+%\usepackage{algorithm}
+
+
+%\include{commands}
+
+% Strut macros for skipping spaces above and below text in tables. 
+\def\abovestrut#1{\rule[0in]{0in}{#1}\ignorespaces}
+\def\belowstrut#1{\rule[-#1]{0in}{#1}\ignorespaces}
+
+\def\abovespace{\abovestrut{0.20in }}
+\def\aroundspace{\abovestrut{0.20in}\belowstrut{0.10in}}
+\def\belowspace{\belowstrut{0.10in}}
+%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\thesistitle{Video Event Localisation and Classification}
+\def\thesisauthor{G K Sudharshan}
+
+\begin{document}
+\bibliographystyle{iitm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% Title page
+
+\title{\thesistitle}
+\author{\thesisauthor}
+
+\date{May 2015}
+\department{Computer Science and Engineering}
+
+%\nocite{*}
+\begin{singlespace}
+\maketitle 
+\end{singlespace} 
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Certificate
+\certificate
+\vspace*{0.5in}
+
+\noindent This is to certify that the thesis entitled {\bf {\thesistitle}}, 
+submitted by {\bf {\thesisauthor}}, to the Indian Institute of Technology, 
+Madras, for the award of the degree of {\bf Master of Technology}, 
+is a bonafide record of the research work carried out by him under my
+supervision. The contents of this thesis, in full or in parts, have not been
+submitted to any other Institute or University for the award of any degree or diploma.
+\vspace*{1.4in}
+\hspace*{-0.25in}
+\begin{singlespace}
+\noindent {\bf Prof.~Hema~A~Murthy} \\
+\noindent Research Guide \\ 
+\noindent Professor \\
+\noindent Dept. of Computer Science and Engineering\\
+\noindent IIT-Madras, 600 036 \\
+\end{singlespace}
+\vspace*{0.20in}
+\noindent Place: Chennai\\ 
+Date:
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Acknowledgements
+\acknowledgements
+I would like to thank my co-partner Abil N George for his
+support and contribution in the toolkit development. Also like to thank all colleagues in DONLAb(IIT Madras) who helped me throughout my research.  Lastly, thanks to my parents for all the moral support and the amazing chances they've given me over the years.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Abstract
+
+\abstract
+
+\noindent KEYWORDS: \hspace*{0.5em} \parbox[t]{4.4in}{Convolutional Neural Network, Spatio Temporal Volumne, Saliency Estimation,}
+
+\vspace*{24pt}
+In this thesis we focus on detecting and identifying the multiple events occurring at a given instance. Discussion about the approaches followed to localize the multiple events occuring at given instance based on the saliency and motion based information.
+Spatio temporal volumes are extracted from a video segments where each volume corresponding to a specific event would be trained through 3D convolutional neural network model (3D-CNN) for sake of classification.
+\pagebreak
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Table of contents etc.
+
+\begin{singlespace}
+\tableofcontents
+\thispagestyle{empty}
+
+\listoftables
+\addcontentsline{toc}{chapter}{LIST OF TABLES}
+\listoffigures
+\addcontentsline{toc}{chapter}{LIST OF FIGURES}
+\end{singlespace}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Abbreviations
+\abbreviations
+\noindent 
+\begin{tabbing}
+xxxxxxxxxxx \= xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \kill
+\textbf{CNN}   \> Convolutional Neural Network \\
+\textbf{STV} \> Spatio Temporal Volume \\
+\end{tabbing}
+
+\pagebreak
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Notation
+
+% \chapter*{\centerline{NOTATION}}
+% \addcontentsline{toc}{chapter}{NOTATION}
+ 
+% \begin{singlespace}
+% \begin{tabbing}
+% xxxxxxxxxxx \= xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \kill
+% \textbf{$r$}  \> Radius, $m$ \\
+% \textbf{$\alpha$}  \> Angle of thesis in degrees \\
+% \textbf{$\beta$}   \> Flight path in degrees \\
+% \end{tabbing}
+% \end{singlespace}
+ 
+% \pagebreak
+% \clearpage
+
+%The main text will follow from this point so set the page numbering
+%to arabic from here on.
+\pagenumbering{arabic}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Introduction.
+
+ \chapter{INTRODUCTION}
+ \label{chap:intro}
+ In the era of Google glass, people want everything in front of them to be explicable. In domains like surveillance, detecting multiple events at same instance is helpful, for instance system must be capable to capture the fire accident and the person responsible for it simultaneously and then alert accordingly. Similarly, annotating events also helps in an effective video retrieval system to associate high level information in video along with the textual description.
+\par In our problem definition, we are given Internet  videos labeled with an event class, where the label specifies the events that occurs within video. In most of the dataset these are weakly labeled settings, i.e we do not have spatio-temporal segmentation, indicating coordinates and time points where at  which event occurs.  The detection aspect of our problem manifests task of localizing the event within the video further building the spatio-temporal volume for better event prediction.
+\par In section II, we we will discuss about the existing techniques used for event detection. We would also cover about our implementation of convolutional neural network in section III. In section IV, we will describe the steps for extracting spatio-temporal volume.
+
+ \chapter{CONVOLUTIONAL NEURAL NETWORK}
+ In this section we will discuss about the reasons for chosing the convolutional neural network and discuss the features supported by the indigenous neural network that was designed.
+ \section{Why CNN~?}
+ Covolutional neural networks (CNN) are variant of multiple layer perceptron that are designed by studying the complex arrangement of cells in the cats visual cortex. It fits very well onto the visual recognition domain where we expect the model to handle very high dimensional data, exploit the topology of image or video and be invariant to small translation and illumination changes. CNN leverage following concepts,
+\subsubsection{Local Connectivity}
+It exploits the spatially local correlation by enforcing local connectivity pattern between neurons of adjacent layers. In other words, every hidden units is only sensitive to a small block in  the visual field, called receptive field. This drastically reduces the number of connections between input and hidden layer, following which diminishes the number of parameters needed to train the model.
+\subsubsection{Shared Filters}
+The hidden units are associated to the receptive field by filters which are shared within a feature map. These filters tries to capture edge like patterns within the receptive field. Additionally, sharing filters increases learning efficiency by greatly reducing the number of free parameters to be learned. Apart from reducing parameters, they extract the same feature at every position, which makes every feature map to be equi-variant to any changes in the input. The shared filters are associated to the receptive field by a dot product operation which can be expressed as a discrete convolution operation.
+\subsubsection{Pooling/Sub-sampling Hidden Units}
+According to this concept, we try to pool the hidden in non-overlapping neighborhood. Among the techniques average and max pooling, max pooling has been commonly used as it provides local translation in-variance. Pooling also reduces inputs to next layer of feature extraction, thus allowing us to have many more feature maps. All feature maps in latter layer extracts coarser features.\par
+All these concepts enable CNN to achieve better generalization in the vision problems. We stack multiple such layers to achieve better responsiveness to larger visual field. \section{Python-DNN Toolkit}
+All these concepts enable CNN to achieve better generalization in the vision problems. We stack multiple such layers to achieve better responsiveness to larger visual field.
+\subsection{Implementation}
+Implementation of CNN is done in python using numerical computation library named \textit{Theano}. It provides platform to run efficiently in CPU and GPU architecture. Following are some key features of our implementation
+\begin{itemize}
+	\item  Allows easy configuration of the model, configurations are organized in JSON format thus makes the configuration legible to humans.
+	\item Supports several types of data readers/writers.
+	\item Enables us to dump CNN features for their use in other applications.
+	\item Facilitates in loading pre-trained model and dumping the trained model.
+	\item Supports two and three dimensional convolutional models.
+	\item Run efficiently in CPU and GPU architectures.
+	
+\end{itemize}
+Our implementation is publicly made available in github\footnote{\url{https://github.com/IITM-DONLAB/python-dnn}}. Sample configurations for some well known dataset like MNIST and CIFAR are also made available with it.
+ 
+\chapter{SAMPLE} 
+ \section{Bibliography with BIB\TeX} 
+ \section{Other useful \LaTeX\ packages}
+ \begin{figure}[htpb]
+   \begin{center}
+     \resizebox{50mm}{!} {\includegraphics *{iitm.eps}}
+     \resizebox{50mm}{!} {\includegraphics *{iitm.eps}}
+     \caption {Two IITM logos in a row.  This is also an
+       illustration of a very long figure caption that wraps around two
+       two lines.  Notice that the caption is single-spaced.}
+   \label{fig:iitm}
+   \end{center}
+ \end{figure}
+ 
+ \begin{table}[htbp]
+   \caption{A sample table with a table caption placed
+     appropriately. This caption is also very long and is
+     single-spaced.  Also notice how the text is aligned.}
+   \begin{center}
+   \begin{tabular}[c]{|c|r|} \hline
+     $x$ & $x^2$ \\ \hline
+     1  &  1   \\
+     2  &  4  \\
+     3  &  9  \\
+     4  &  16  \\
+     5  &  25  \\
+     6  &  36  \\
+     7  &  49  \\
+     8  &  64  \\ \hline
+   \end{tabular}
+   \label{tab:sample}
+   \end{center}
+ \end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Appendices.
+
+ \appendix
+ \chapter{A SAMPLE APPENDIX}
+ Just put in text as you would into any chapter with sections and
+ whatnot.  Thats the end of it.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% List of papers
+
+\chapter*{Publications}
+\vspace{-0.3cm}
+
+\begin{enumerate}
+\item S. M. Narayanamurthy and B. Ravindran (2007). \newblock
+  Efficiently Exploiting Symmetries in Real Time Dynamic Programming. \newblock {\em
+  IJCAI 2007, Proceedings of the 20th International Joint Conference on
+  Artificial Intelligence}, pages 2556--2561.
+\end{enumerate}
+
+%\nocite{bellman, Amarel:1968, manning, knoblock90learning,
+%crawford92theoretical, Barto:rtdp, Ravindran:proof}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Bibliography.
+\pagebreak
+\begin{singlespace}
+  \begin{small}
+	\bibliography{refs}
+  \end{small}
+\end{singlespace}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}

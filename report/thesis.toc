@@ -1,0 +1,17 @@
+\contentsline {chapter}{ACKNOWLEDGEMENTS}{i}{chapter*.1}
+\contentsline {chapter}{ABSTRACT}{ii}{chapter*.2}
+\contentsline {chapter}{LIST OF TABLES}{iv}{chapter*.4}
+\contentsline {chapter}{LIST OF FIGURES}{v}{chapter*.5}
+\contentsline {chapter}{ABBREVIATIONS}{vi}{chapter*.6}
+\contentsline {chapter}{\numberline {1}INTRODUCTION}{1}{chapter.1}
+\contentsline {chapter}{\numberline {2}CONVOLUTIONAL NEURAL NETWORK}{2}{chapter.2}
+\contentsline {section}{\numberline {2.1}Why CNN\nobreakspace {}?}{2}{section.2.1}
+\contentsline {subsubsection}{Local Connectivity}{2}{section*.7}
+\contentsline {subsubsection}{Shared Filters}{3}{section*.8}
+\contentsline {subsubsection}{Pooling/Sub-sampling Hidden Units}{3}{section*.9}
+\contentsline {section}{\numberline {2.2}Python-DNN Toolkit}{3}{section.2.2}
+\contentsline {subsection}{\numberline {2.2.1}Implementation}{4}{subsection.2.2.1}
+\contentsline {chapter}{\numberline {3}SAMPLE}{5}{chapter.3}
+\contentsline {section}{\numberline {3.1}Bibliography with BIBT\kern -.1667em\lower .5ex\hbox {E}\kern -.125emX\spacefactor \@m }{5}{section.3.1}
+\contentsline {section}{\numberline {3.2}Other useful \LaTeX \ packages}{5}{section.3.2}
+\contentsline {chapter}{\numberline {A}A SAMPLE APPENDIX}{7}{appendix.A}
