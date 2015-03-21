@@ -5,7 +5,11 @@
 *.o
 *.pyx~
 *.*~
-
+*.log
+*.out
+*.ps
+*.dvi
+*.aux
  
 # Packages #
 ############
