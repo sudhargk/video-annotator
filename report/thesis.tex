@@ -172,21 +172,40 @@ Implementation of CNN is done in python using numerical computation library name
 	\item Run efficiently in CPU and GPU architectures.
 	
 \end{itemize}
-Our implementation is publicly made available in github\footnote{\url{https://github.com/IITM-DONLAB/python-dnn}}. Sample configurations for some well known dataset like MNIST and CIFAR are also made available with it.
- 
+Our implementation is publicly made available in github\footnote{\url{https://github.com/IITM-DONLAB/python-dnn}}. Architecture of the indigenous DNN toolkit is shown on \ref{fig:architecture}.Sample configurations for some well known dataset like MNIST and CIFAR are also made available with it.
+\begin{figure}[htpb]
+   \begin{center}
+     \resizebox{140mm}{!} {\includegraphics *{snaps/architecture.eps}}
+     \caption {Architecture of Python-DNN}
+   \label{fig:architecture}
+   \end{center}
+ \end{figure}
+\chapter{BACKGROUND SUBTRACTION TECHNIQUES} 
+In order to identify multiple events occurring simultaneously, we extract temporal volumes by  bounding the visual field corresponding to the event. Extracted temporal volumes are fed to a three dimensional CNN to identify the corresponding event. 
+\par Event localization can be performed by determining the position with pixel changes and understanding the motion relativity as discussed in ~\cite{Basharat08}, where all components corresponding to an event show a similar flow of pixels. Following approach works significantly well in surveillance data but fails terribly in case human event detection. Later realized that, if we eliminate the background(static parts) of the visual frame, remaining would correspond to possible event locations. After background subtraction, we segment the visual frame and build temporal volumes corresponding to different events.
+Several background subtraction technique are eminent in the literature ~\cite{Piccardi04}, among these some apply on static image while others on dynamic video. In case of our application we can blend both these approaches to generate more reliable event detectors.
+\section{Frame Differencing}
+A very common approach for performing the moving object segmentation is using frame differencing but these approach is very sensitive to small changes and yields lots of noise. We can also replace difference of a single previous frame  by an average of multiple previous frames, yet is very noisy and not reliable.
+\section{Eigen subtraction}
+An alternate approach named eigen background subtraction was seen to be more elegant. A sample of N images of the videos are obtained, mean background image $\nu_b$ is computed and all mean normalized images $X$. Then we perform principal component analysis on the mean normalized images, idea is, that a high-dimensional images are often described by correlated variables and only a few meaningful dimensions account for most of the information. But performing PCA is not straightforward, consider 100 images of dimension 100x100 pixels, then the dimension of generated covariance matrix would be 10000x10000, i.e roughly 0.8 GB (considering 64 bit float values). Solving this is not feasible, hence we apply a trick from linear algebra that for a MXN matrix with $M>N$, we can at most have N-1 non-zero eigen values ~\cite{Duda01}. So we perform eigen decomposition of $X^TX$:
+$$X^TX\nu_i=\lambda_i\nu_i$$
+$$XX^T(X\nu_i)=\lambda_i(X\nu_i)$$
+Hence the orthonormal eigen vector of $XX^T$ is found out by normalizing $X\nu_i$ to unit length. Once eigen vectors of $XX^T$  are computed, we project the current frame $F$ on the eigen vector with top eigen values, and the reconstructed frame $F'$ is obtained by using the projection coefficients and the eigen vectors. The difference $F-F'$ would correspond to the mask on the moving object. 
+\section{Mixture of Gaussian}
+This is one of the well known method of extracting foreground information. Add more details
+\par Results of foreground mask obtained using moving average and eigen subtraction methods are shown in Figure \ref{fig:bgsub}.
+\chapter{Saliecny Detection}
+As we had discussed earlier about the different techniques to extract the eminent pixels which are in motion, some other pixels which are stationary but which are quite distinct might also play a important role in the the activity recognition. We would discuss different techniques for saliency of different pixels.
+\section{Regional Contrast}
+
+
+
+
+
 \chapter{SAMPLE} 
  \section{Bibliography with BIB\TeX} 
  \section{Other useful \LaTeX\ packages}
- \begin{figure}[htpb]
-   \begin{center}
-     \resizebox{50mm}{!} {\includegraphics *{iitm.eps}}
-     \resizebox{50mm}{!} {\includegraphics *{iitm.eps}}
-     \caption {Two IITM logos in a row.  This is also an
-       illustration of a very long figure caption that wraps around two
-       two lines.  Notice that the caption is single-spaced.}
-   \label{fig:iitm}
-   \end{center}
- \end{figure}
+
  
  \begin{table}[htbp]
    \caption{A sample table with a table caption placed

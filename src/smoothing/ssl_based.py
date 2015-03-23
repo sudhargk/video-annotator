@@ -7,12 +7,12 @@ class SSLBased(Smoothing):
 	def __init__(self,_feats, max_iter = 10):
 		super(SSLBased,self,).__init__(_feats)
 		self.max_iter =  max_iter
-		self.ssl_model = label_propagation.LabelSpreading(kernel='knn',n_neighbors=20,max_iter = self.max_iter);
+		self.ssl_model = label_propagation.LabelSpreading(kernel='rbf',n_neighbors=10,max_iter = self.max_iter);
 		
-	def __build_model__(self,frame_feats,target,num_examples = 2000):
+	def __build_model__(self,frame_feats,target,num_examples = 1000):
 		#sel = np.int8(np.linspace(0, target.__len__(), num=num_examples))
-		#sel = np.random.permutation(range(target.__len__()))[:num_examples]
-		#frame_feats = frame_feats[sel,:]; target = target[sel];
+		sel = np.random.permutation(range(target.__len__()))[:num_examples]
+		frame_feats = frame_feats[sel,:]; target = target[sel];
 		#print frame_feats.shape,target.shape
 		self.ssl_model.fit(frame_feats,target);
 		return self.ssl_model;

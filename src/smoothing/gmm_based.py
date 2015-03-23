@@ -2,17 +2,36 @@ import time
 from  smoothing import Smoothing
 import numpy as np,cv2
 from utils import normalize
-from sklearn.mixture import GMM as GMM
+from sklearn.mixture import VBGMM as GMM
+from sklearn.cluster import KMeans
+
+RANDOM = 12
 
 class GMMBased(Smoothing):
 	def __init__(self,_feats, numMixtures = 2):
 		super(GMMBased,self,).__init__(_feats)
 		self.numMixtures =  numMixtures
-		
+		self.threshold = 0.7
+	
+	def __compute_mean__(self,mask_feats):
+		#start_time = time.time();
+		cluster = KMeans(init='k-means++', n_clusters=self.numMixtures,max_iter = 10,
+						random_state=RANDOM)
+		cluster.fit(mask_feats)
+		#print "building kmeans : ",time.time()-start_time	
+		return cluster.cluster_centers_;
+			
 	def __build_model__(self,fg_mask_feats,bg_mask_feats):
-		fg_gmm = GMM(n_components=self.numMixtures,covariance_type='diag',n_iter=4,random_state=1);
+		fg_cl_means = self.__compute_mean__(fg_mask_feats);
+		fg_gmm = GMM(n_components=self.numMixtures,covariance_type='diag',n_iter=4,
+						init_params='wc');
+		fg_gmm.means_ = fg_cl_means;
 		fg_gmm.fit(fg_mask_feats);
-		bg_gmm = GMM(n_components=self.numMixtures,covariance_type='diag',n_iter=4,random_state=1);
+		
+		bg_cl_means = self.__compute_mean__(bg_mask_feats);
+		bg_gmm = GMM(n_components=self.numMixtures,covariance_type='diag',n_iter=4,
+						init_params='wc',random_state=RANDOM);
+		bg_gmm.means_ = bg_cl_means;
 		bg_gmm.fit(bg_mask_feats);
 		return (fg_gmm,bg_gmm);
 		
@@ -63,9 +82,9 @@ class GMMBased(Smoothing):
 		blockFeats = np.vstack([self.feats(block) for block in blocks])
 		blockFgMask = np.hstack([mask.flatten() for mask in fgMasks])
 		blockBgMask = np.hstack([mask.flatten() for mask in bgMasks])
-		start_time = time.time();
+		#start_time = time.time();
 		gmm = self.__build_model__(blockFeats[blockFgMask==1,:],blockFeats[blockBgMask==1,:]);
-		print "building model : ",time.time()-start_time	
+		#print "building model : ",time.time()-start_time	
 		if smoothFrames is None:
 			smoothFrames = range(numBlocks);
 		else:
