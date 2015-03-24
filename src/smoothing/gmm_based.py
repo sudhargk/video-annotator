@@ -2,7 +2,7 @@ import time
 from  smoothing import Smoothing
 import numpy as np,cv2
 from utils import normalize
-from sklearn.mixture import VBGMM as GMM
+from sklearn.mixture import GMM as GMM
 from sklearn.cluster import KMeans
 
 RANDOM = 12
@@ -12,6 +12,9 @@ class GMMBased(Smoothing):
 		super(GMMBased,self,).__init__(_feats)
 		self.numMixtures =  numMixtures
 		self.threshold = 0.7
+		self.fg_gmm = None
+		self.bg_gmm = None
+						
 	
 	def __compute_mean__(self,mask_feats):
 		#start_time = time.time();
@@ -22,24 +25,34 @@ class GMMBased(Smoothing):
 		return cluster.cluster_centers_;
 			
 	def __build_model__(self,fg_mask_feats,bg_mask_feats):
-		fg_cl_means = self.__compute_mean__(fg_mask_feats);
-		fg_gmm = GMM(n_components=self.numMixtures,covariance_type='diag',n_iter=4,
+		if self.fg_gmm is None and self.bg_gmm is None:
+			fg_cl_means = self.__compute_mean__(fg_mask_feats);
+			bg_cl_means = self.__compute_mean__(bg_mask_feats);
+			self.fg_gmm = GMM(n_components=self.numMixtures,covariance_type='diag',n_iter=4,
 						init_params='wc');
-		fg_gmm.means_ = fg_cl_means;
-		fg_gmm.fit(fg_mask_feats);
-		
-		bg_cl_means = self.__compute_mean__(bg_mask_feats);
-		bg_gmm = GMM(n_components=self.numMixtures,covariance_type='diag',n_iter=4,
+			self.bg_gmm = GMM(n_components=self.numMixtures,covariance_type='diag',n_iter=4,
 						init_params='wc',random_state=RANDOM);
-		bg_gmm.means_ = bg_cl_means;
-		bg_gmm.fit(bg_mask_feats);
-		return (fg_gmm,bg_gmm);
+			self.fg_gmm.means_ = fg_cl_means;	self.bg_gmm.means_ = bg_cl_means;
+		else:
+			fg_covars = self.fg_gmm.covars_; bg_covars = self.bg_gmm.covars_;
+			fg_weights = self.fg_gmm.weights_; bg_weights = self.bg_gmm.weights_;
+			fg_means = self.fg_gmm.means_; bg_means = self.bg_gmm.means_;
+			self.fg_gmm = GMM(n_components=self.numMixtures,covariance_type='diag',n_iter=4,
+						init_params='');
+			self.bg_gmm = GMM(n_components=self.numMixtures,covariance_type='diag',n_iter=4,
+						init_params='');
+			self.fg_gmm.means_ = fg_means;		self.bg_gmm.means_ = bg_means;
+			self.fg_gmm.covars_ = fg_covars;	self.bg_gmm.covars_ = bg_covars;
+			self.fg_gmm.weights_ = fg_weights;	self.bg_gmm.weights_ = bg_weights;
+		self.fg_gmm.fit(fg_mask_feats);
+		self.bg_gmm.fit(bg_mask_feats);
+		return (self.fg_gmm,self.bg_gmm);
 		
 	def __get_score__ (self,block,frame_feats,shape,gmm):
 		assert(shape[0]*shape[1] == frame_feats.__len__())
 		fg_score = gmm[0].score(frame_feats)
 		bg_score = gmm[1].score(frame_feats)
-		frames_mask =  (fg_score>bg_score).reshape((shape[0],shape[1]))
+		frames_mask =  ( fg_score> bg_score).reshape((shape[0],shape[1]))
 		return np.uint8(frames_mask);
 		"""
 		bgdModel = np.zeros((1,65),np.float64); fgdModel = np.zeros((1,65),np.float64)
@@ -75,7 +88,7 @@ class GMMBased(Smoothing):
 		return np.uint8(recon>0.8).reshape((numBlocks,shape[0],shape[1]))
 		
 	
-	def process(self,blocks,fgMasks,bgMasks,smoothFrames=None):
+	def process(self,blocks,fgMasks,bgMasks, smoothFrames=None):
 		numBlocks = blocks.__len__();
 		assert(numBlocks>0)
 		shape = blocks[0].shape;	frameSize = np.prod(shape[:2])
@@ -88,9 +101,10 @@ class GMMBased(Smoothing):
 		if smoothFrames is None:
 			smoothFrames = range(numBlocks);
 		else:
-			smoothFrames = [idx for idx in smoothFrames if idx < numBlocks];			
+			smoothFrames = [idx for idx in smoothFrames if idx < numBlocks];	
 		newMasks = [self.__get_score__(blocks[frameIdx],
-							blockFeats[frameIdx*frameSize:(frameIdx+1)*frameSize],shape,gmm) 
-							for frameIdx in smoothFrames]
+						blockFeats[frameIdx*frameSize:(frameIdx+1)*frameSize],shape,gmm) 
+						for frameIdx in smoothFrames]
+		
 		#newMasks = self.eigenSmoothing(newMasks)
 		return newMasks

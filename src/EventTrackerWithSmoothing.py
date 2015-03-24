@@ -39,8 +39,8 @@ def process_next_block(sal_rc,bg_es,blockSize=4):
 			#bgmask = np.float32(np.where((mask_cut==0),1,0))
 			#print np.sum(fgmask==1),np.sum(bgmask==1)
 			"""
-			_,fgmask = cv2.threshold(saliency_prob,0.5,1,cv2.THRESH_BINARY)
-			_,bgmask = cv2.threshold(saliency_prob,0.1,1,cv2.THRESH_BINARY_INV)
+			_,fgmask = cv2.threshold(saliency_prob,0.6,1,cv2.THRESH_BINARY)
+			_,bgmask = cv2.threshold(bg_es.variation,0.1,1,cv2.THRESH_BINARY_INV)
 			bg_mask_blocks.append(bgmask);
 			fg_mask_blocks.append(fgmask);
 		else:
@@ -50,7 +50,7 @@ def process_next_block(sal_rc,bg_es,blockSize=4):
 def __morphologicalOps__(masks):
 	new_masks = [];
 	for mask in masks:
-		_mask = binary_fill_holes(mask)
+		#_mask = binary_fill_holes(mask)
 		_mask = cv2.medianBlur(np.uint8(mask),3)
 		_mask = cv2.morphologyEx(_mask, cv2.MORPH_OPEN, KERNEL)
 		_mask = cv2.medianBlur(_mask,3)
@@ -61,23 +61,19 @@ def __morphologicalOps__(masks):
 	return np.uint8(new_masks);
 
 
-def detect_object(newMasks,oldMasks=None):
-	num_frames = newMasks.__len__();
-	frameWindows = [];
-	for idx in range(num_frames):
-		window = []; (lbls,num) = label(newMasks[idx],connectivity=2,neighbors=4,return_num=True,background=0)
-		for lbl in range(np.max(lbls)+1):
-			pixels = np.where(lbls==lbl); _max = np.max(pixels,1); _min = np.min(pixels,1)
-			area = np.prod(_max - _min);
-			if  (4 * np.sum(newMasks[idx][_min[0]:_max[0],_min[1]:_max[1]]) > area) and \
-				((oldMasks is None) or (np.sum(oldMasks[idx][_min[0]:_max[0],_min[1]:_max[1]]) > 10)):
-				rect = np.array([_min[1],_min[0],_max[1],_max[0]],dtype=np.uint8);
-				window.extend([rect]);
-		frameWindows.extend([window]);
-	return frameWindows;
+def detect_object(newMask,oldMask=None):
+	window = []; (lbls,num) = label(newMask,connectivity=2,neighbors=4,return_num=True,background=0)
+	for lbl in range(np.max(lbls)+1):
+		pixels = np.where(lbls==lbl); _max = np.max(pixels,1); _min = np.min(pixels,1)
+		area = np.prod(_max - _min);
+		if  (4 * np.sum(newMask[_min[0]:_max[0],_min[1]:_max[1]]) > area) and \
+			((oldMask is None) or (np.sum(oldMask[_min[0]:_max[0],_min[1]:_max[1]]) > 10)):
+			rect = np.array([_min[1],_min[0],_max[1],_max[0]],dtype=np.uint8);
+			window.extend([rect]);
+	return window;
 	
 def write_block(vidwriter,frame,newMask,oldMask,windows,window_lbl):
-	zero_frame  = np.zeros((frame.shape[0],frame.shape[1],3),dtype=np.float32);
+	zero_frame  = np.zeros((newMask.shape[0],newMask.shape[1],3),dtype=np.float32);
 	zero_frame[:,:,2] = np.float32(oldMask*255);
 	out_frame1 = cv2.addWeighted(np.float32(frame),0.6,zero_frame,0.4,0.0);
 	out_frame2 = frame
@@ -89,7 +85,7 @@ def write_block(vidwriter,frame,newMask,oldMask,windows,window_lbl):
 	out_frame = np.hstack((out_frame1,out_frame2))
 	vidwriter.write(np.uint8(out_frame))
 	
-def process(vidreader,out_path,batch=10):
+def process(vidreader,out_path,batch=4):
 	sal_rc = sal_instance(SaliencyMethods.REGION_CONTRAST,SaliencyProps())	
 	bg_es = get_instance(BGMethods.FRAME_DIFFERENCING,vidreader.read_next)
 	tracker = tracker_instance(0);
@@ -98,7 +94,7 @@ def process(vidreader,out_path,batch=10):
 	frame_idx = 0; N = vidreader.frames;
 	batchsize = batch * 2
 	_frames = []; _fgmasks = []; _bgmasks = [];
-	frameOldMasks = []; frameMasks = [];	frameWindows = [];
+	frameOldMasks = []; frameMasks = [];
 	while(vidreader.has_next()):
 		print 'Proceesing Video... {0}%\r'.format((frame_idx*100/N))
 		(cnt,frames,fgmasks,bgmasks) = process_next_block(sal_rc,bg_es,batchsize);
@@ -108,8 +104,8 @@ def process(vidreader,out_path,batch=10):
 			newMasks = smoothner.process(_frames,_fgmasks,_bgmasks,range(batch/2,3*batch/2));
 			newMasks = __morphologicalOps__(newMasks);	
 			oldMasks = _fgmasks[batch/2:batch/2+newMasks.__len__()]
-			windows = detect_object(newMasks,oldMasks)
-			frameOldMasks.extend(oldMasks); frameMasks.extend(newMasks); frameWindows.extend(windows);	
+			frameOldMasks.extend(oldMasks); frameMasks.extend(newMasks);
+			#print newMasks[0].shape,oldMasks[0].shape
 			_frames = _frames[batch:];_fgmasks = _fgmasks[batch:]; _bgmasks = _bgmasks[batch:];
 		else:
 			break;
@@ -119,10 +115,12 @@ def process(vidreader,out_path,batch=10):
 	print "Tracking process starts..."
 	vidreader.__reset__();
 	vidreader.skip_frames(batch/2); frameIdx = -1;	
-	while(vidreader.num_remaining_frames()>batch/2):
+	numFrames= frameMasks.__len__();
+	while(frameIdx + 1 < numFrames):
 		frame = vidreader.read_next(); frameIdx += 1;
-		window_label = tracker.track_object(frame,frameWindows[frameIdx],frameMasks[frameIdx]);
-		write_block(vidwriter,frame,frameMasks[frameIdx],frameOldMasks[frameIdx],frameWindows[frameIdx],window_label);
+		window = detect_object(frameMasks[frameIdx],frameOldMasks[frameIdx])
+		window_label = tracker.track_object(frame,window,frameMasks[frameIdx]);
+		write_block(vidwriter,frame,frameMasks[frameIdx],frameOldMasks[frameIdx],window,window_label);
 	vidreader.close();
 	vidwriter.close()
 	

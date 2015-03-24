@@ -52,6 +52,6 @@ def allFeats(image):
 	_position = position(image);
 	_grad = gradient(image);
 	#allFeats = _color
-	allFeats = np.hstack((_grad,_texture,_position))
+	allFeats = np.hstack((_color,_texture,_grad,_position))
 	#allFeats = np.hstack((_color,_grad,_texture))
 	return normalize2D(allFeats,0);

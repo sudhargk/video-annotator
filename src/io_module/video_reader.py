@@ -1,11 +1,11 @@
 import cv2
 class VideoReader(object):
-	def __init__(self,filename,resize=(0.5,0.5)):
+	def __init__(self,filename,resize=(160,120)):
 		self.filename = filename;
 		self.cap = cv2.VideoCapture(filename) 
 		self.resize = resize
-		self.width = self.cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)*self.resize[0]
-		self.height = self.cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)*self.resize[1]
+		self.width = self.resize[0]#self.width = self.cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)*self.resize[0]
+		self.height = self.resize[1]#self.height = self.cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)* self.resize[1]
 		self.frames = self.cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)
 		self.read_frames = 0;
 	
@@ -18,7 +18,8 @@ class VideoReader(object):
 			ret, frame = self.cap.read()
 			self.read_frames += 1;
 			if ret:
-				frame = cv2.resize(frame, (0,0), fx=self.resize[0], fy=self.resize[1])
+				#frame = cv2.resize(frame,(0,0),fx=self.resize[0],fy=self.resize[1]);
+				frame = cv2.resize(frame,self.resize);
 				return frame
 			return None
 		
