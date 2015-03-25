@@ -8,6 +8,7 @@ from skimage.morphology import watershed
 from skimage.feature import peak_local_max
 from skimage.measure import label
 from scipy.spatial.distance import pdist,squareform
+from features.color import LAB,GRAY
 from utils import mkdirs
 from scipy import ndimage
 from utils import normalize
@@ -86,31 +87,33 @@ class Saliency(object):
 		Args :
 			do_equalize (bool) : perform color equalization
 	"""
-	def quantize (self,cur_frame,do_equalize=True):
+	def __quantize__ (self,cur_frame,do_equalize=True):
 		start_time = time.time();
-		self.q_frame = cur_frame.copy();
+		q_frame = cur_frame.copy();
 		if do_equalize:
-			self.q_frame[:,:,0] = cv2.equalizeHist(cur_frame[:,:,0])
-			self.q_frame[:,:,1] = cv2.equalizeHist(cur_frame[:,:,1])
-			self.q_frame[:,:,2] = cv2.equalizeHist(cur_frame[:,:,2])
+			q_frame[:,:,0] = cv2.equalizeHist(cur_frame[:,:,0])
+			q_frame[:,:,1] = cv2.equalizeHist(cur_frame[:,:,1])
+			q_frame[:,:,2] = cv2.equalizeHist(cur_frame[:,:,2])
 		if self.props.doProfile:
 			cv2.imwrite(self.PROFILE_PATH + self.method+'_q.png',self.q_frame);
 			print "Quantization time : ",time.time()-start_time
+		return q_frame
 			
 	"""
 		Extract Color properties either LAB color or RGB color
 		Returns :
 			Color properties
 	"""
-	def extract_color(self):
+	def __extract_color__(self,frame,regions,region_props):
+		num_regions = len(np.unique(regions));
 		if self.props.useLAB:
-			lab_frame = cv2.cvtColor(self.q_frame,cv2.COLOR_RGB2LAB);
-			color_data = np.array([np.sum(lab_frame[np.where(self.regions==region)],0)
-											for region in range(self.num_regions)])
+			lab_frame = LAB(frame);
+			color_data = np.array([np.sum(lab_frame[np.where(regions==region)],0)
+											for region in range(num_regions)])
 		else:
-			color_data = np.array([np.sum(self.q_frame[np.where(self.regions==region)],0)
-											for region in range(self.num_regions)])
-		_inv_freq = 1/(self.freq+0.0000001); color_data = color_data*_inv_freq[:,None]
+			color_data = np.array([np.sum(frame[np.where(regions==region)],0)
+											for region in range(num_regions)])
+		_inv_freq = 1/(region_props[1]+0.0000001); color_data = color_data*_inv_freq[:,None]
 		return color_data;
 		
 	"""
@@ -118,153 +121,92 @@ class Saliency(object):
 		Returns :
 			Texture properties
 	"""
-	def extract_texture(self):
-		gray = cv2.cvtColor(self.q_frame,cv2.COLOR_RGB2GRAY)
-		"""
-		def texture_prop(region,patch_size = 2):
-			_mean_min = self.mean[region]-patch_size;
-			_mean_max = self.mean[region]+patch_size;
-			glcm = greycomatrix(gray_frame[_mean_min[0]:_mean_max[0],_mean_min[1]:_mean_max[1]],
-						[3], [0], 256, symmetric=True, normed=True)
-			_dis = greycoprops(glcm, 'dissimilarity')[0, 0];
-			_cor = greycoprops(glcm, 'correlation')[0, 0];
-			return (_dis,_cor);
-		texture_data = np.array([texture_prop(region) for region in range(self.num_regions)])
-		"""
-		eigen = cv2.cornerEigenValsAndVecs(gray,15,3);
-		eigen = eigen.reshape(gray.shape[0], gray.shape[1], 3, 2)
-		texture_mag = normalize(np.sqrt(eigen[:,:,0,0]**2 +  eigen[:,:,0,1]**2))
-		texture_dir1 = normalize(np.arctan2(eigen[:,:,1,1],eigen[:,:,1,0]))
-		texture_dir2 = normalize(np.arctan2(eigen[:,:,2,1],eigen[:,:,2,0]))
-		texture_prop  = np.dstack((texture_mag,texture_dir1,texture_dir1));
-		texture_data = np.array([np.sum(texture_prop[np.where(self.regions==region)],0)
-											for region in range(self.num_regions)])
-		_inv_freq = 1/(self.freq+0.0000001); texture_data = texture_data*_inv_freq[:,None]
+	def __extract_texture__(self,frame,regions,region_props,useGLCM=False,useEigen=True):
+		num_regions = len(np.unique(regions));
+		gray = GRAY(frame)
+		texture_data_glcm = None; texture_data_eig = None
+		if useGLCM:
+			def texture_prop(region,patch_size = 2):
+				_mean_min = region_props[0][region]-patch_size;
+				_mean_max = region_props[0][region]+patch_size;
+				glcm = greycomatrix(gray_frame[_mean_min[0]:_mean_max[0],_mean_min[1]:_mean_max[1]],
+							[3], [0], 256, symmetric=True, normed=True)
+				_dis = greycoprops(glcm, 'dissimilarity')[0, 0];
+				_cor = greycoprops(glcm, 'correlation')[0, 0];
+				return (_dis,_cor);
+			texture_data_glcm = np.array([texture_prop(region) for region in range(num_regions)])
+		
+		if useEigen:			
+			eigen = cv2.cornerEigenValsAndVecs(gray,15,3);
+			eigen = eigen.reshape(gray.shape[0], gray.shape[1], 3, 2)
+			texture_mag = normalize(np.sqrt(eigen[:,:,0,0]**2 +  eigen[:,:,0,1]**2))
+			texture_dir1 = normalize(np.arctan2(eigen[:,:,1,1],eigen[:,:,1,0]))
+			texture_dir2 = normalize(np.arctan2(eigen[:,:,2,1],eigen[:,:,2,0]))
+			texture_prop  = np.dstack((texture_mag,texture_dir1,texture_dir1));
+			texture_data_eig = np.array([np.sum(texture_prop[np.where(regions==region)],0)
+												for region in range(num_regions)])
+			_inv_freq = 1/(region_props[1]+0.0000001); 	
+			texture_data_eig = texture_data_eig * _inv_freq[:,None]
+			
+		if useGLCM and useEigen:
+			texture_data = np.hstack((texture_data_glcm,texture_data_eig));
+		elif useGLCM:
+			texture_data = texture_data_glcm
+		elif useEigen:
+			texture_data = texture_data_eig
+		else:
+			raise ArgumentError("argument useGLCM and useEigen both cannot be false");
 		return texture_data
 		
 	"""
 		Initial segmentation using oversegmentation using slic
 	"""
-	def build_region(self):
+	def __build_region__(self,q_frame):
 		start_time = time.time();
-		self.regions = segmentation.slic(self.q_frame,self.props.num_superpixels, self.props.compactness,
+		regions = segmentation.slic(q_frame,self.props.num_superpixels, self.props.compactness,
 				convert2lab=self.props.useLAB,multichannel=True)
-		self.num_regions = np.unique(self.regions).__len__();
-		self.s_frame = color.label2rgb(self.regions,self.q_frame, kind='avg')
-		self.mean = np.array([region['centroid'] for region in regionprops(self.regions+1)])
-		self.freq = np.array([np.sum(self.regions==region) for region in range(self.num_regions)])
+		num_regions = len(np.unique(regions));
+		s_frame = color.label2rgb(regions,q_frame, kind='avg')
+		mean = np.array([region['centroid'] for region in regionprops(regions+1)])
+		freq = np.array([np.sum(regions==region) for region in range(num_regions)])
+		region_props = (mean,freq);
+		
 		if self.props.useColor:
-			self.color_data = self.extract_color();			
+			color_data = self.__extract_color__(q_frame,regions,region_props);		
 		if self.props.useTexture:
-			self.texture_data = self.extract_texture();
+			texture_data = self.__extract_texture__(q_frame,regions,region_props);
 			
 		if self.props.useTexture and self.props.useColor:
-			self.data = np.hstack((self.color_data,self.texture_data))
+			data = np.hstack((color_data,texture_data))
 		elif self.props.useTexture:
-			self.data = self.texture_data
+			data = texture_data
 		else :
-			self.data = self.color_data
-						
+			data = color_data
+				
 		if self.props.doProfile:
-			cv2.imwrite(self.PROFILE_PATH+self.method+'_s.png',self.s_frame);					
+			cv2.imwrite(self.PROFILE_PATH+self.method+'_s.png',s_frame);					
 			print "Build region (preprocess) : ",time.time()-start_time
 	
+		return (num_regions,regions,region_props,data);
 	"""
 		Performs saliency cut using the grab cut algorithm, if doCUT set false then it just applies threshold
 	"""
 	
-	def saliency_cut(self,max_iters = 1):
-		start_time = time.time();
-		self.saliency = np.float32(self.saliency);
-		_,self.mask = cv2.threshold(self.saliency,self.props.threshold,1,cv2.THRESH_BINARY)
-		self.mask = np.uint8(self.mask)
-		_,self.bgmask = cv2.threshold(self.saliency,0.2,1,cv2.THRESH_BINARY_INV)
-		self.bgmask = np.uint8(self.bgmask)
-		"""
-		labels = (self.regions+1)*self.mask
-		_input = cv2.GaussianBlur(self.s_frame*self.mask[:,:,None],(5,5),2)
-		for iter in range(max_iters):
-			_graph = graph.rag_mean_color(_input,labels, mode='similarity')
-			labels = graph.cut_normalized(labels,_graph)
-			_input = color.label2rgb(labels,_input, kind='avg')
-		
-		#Eliminating cluster relative smaller regions size
-		unique_labels = np.unique(labels)[1:]
-		count_labels = np.array([np.sum(labels==lbl) for lbl in unique_labels])
-		sel_labels = unique_labels[count_labels >= np.average(count_labels)]
-		self.mask = sum(labels==lbl for lbl in sel_labels);
-		e_labels = np.zeros(labels.shape,dtype=np.int32)
-		for idx,lbl in enumerate(sel_labels):
-			e_labels += (labels==lbl)*(idx+1)
-		
-		cv2.watershed(_input,e_labels)
-		e_labels[e_labels==-1]=0;
-		labels = np.unique(e_labels)[1:]
-		print labels
-		self.mask = sum([np.where(e_labels==lbl,1,0) for lbl in labels]);
-		self.ncut = color.label2rgb(e_labels,_input, kind='avg')		
-		"""
-		#out_mask = np.zeros(self.shape[:2],np.bool);
-		#for lbl in sel_labels:
-		#	in_mask = np.uint8(labels==lbl);
-		#	print np.sum(in_mask)
-		#	bgdModel = np.zeros((1,65),np.float64); fgdModel = np.zeros((1,65),np.float64)
-		#	cv2.grabCut(self.q_frame,in_mask,None,bgdModel,fgdModel,5,cv2.GC_INIT_WITH_MASK)
-		#	new_mask = np.where((in_mask==0)|(in_mask==2),False,True)
-		#	print np.sum(new_mask)
-		#	out_mask = out_mask|new_mask
-		#self.mask = np.uint8(out_mask)
-		#gray_img  = cv2.cvtColor(self.s_frame,cv2.COLOR_RGB2GRAY)
-		#np.uint8(self.s_frame)
-		#markers = np.uint8(self.mask*labels)
-		#print markers.shape
-		#self.mask = cv2.watershed(np.uint8(self.s_frame),markers);
-		
-		#self.mask[self.mask==-1]=0;
-		#self.cut_labels = unique_labels
-		#self.ncut = self.s_frame * self.mask[:,:,None] 
-		if self.props.doProfile:
-			cv2.imwrite(self.PROFILE_PATH+self.method+'_cut.png',self.ncut);					
-			print "Saliency cut : ",time.time()-start_time
+	def saliency_cut(self,frame,saliency,max_iters = 1):
+		_,mask = cv2.threshold(saliency,self.props.threshold,1,cv2.THRESH_BINARY);
+		return mask
 			
-	"""
-	def saliency_cut(self,
-			scale_l = np.array([[0,0],[0.25,0],[0,0.25],[0.25,0.25],[0.125,0.125]]),
-			scale_u = np.array([[0.75,0.75],[1,0.75],[0.75,1],[1,1],[0.875,0.875]]),
-			max_iter = 2):
-		start_time = time.time();
-		_,self.mask = cv2.threshold(self.saliency,self.props.threshold*255,1,cv2.THRESH_BINARY)
-		if self.props.doCUT:
-			scale_l = np.array(scale_l * self.shape[0],np.uint);
-			scale_u = np.array(scale_u * self.shape[1],np.uint);
-			rect = np.hstack((scale_l,scale_u));
-			kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(4,4))
-			bgdModel = np.zeros((1,65),np.float64); fgdModel = np.zeros((1,65),np.float64)
-			out_mask = np.zeros(self.shape[:2],np.bool);
-			for iter in range(max_iter):
-				in_mask = np.uint8(self.mask.copy());
-				for idx in range(rect.__len__()):
-					cv2.grabCut(self.q_frame,in_mask,tuple(rect[idx,:]),bgdModel,fgdModel,1,cv2.GC_INIT_WITH_MASK)
-					out_mask = out_mask|np.where((in_mask==0)|(in_mask==2),False,True)
-					self.mask = np.uint8(out_mask)
-				#self.mask = cv2.morphologyEx(self.mask, cv2.MORPH_CLOSE, kernel)
-				#self.mask = cv2.morphologyEx(self.mask, cv2.MORPH_OPEN, kernel)
-				
-		self.mask = np.uint8(self.mask);
-		if self.props.doProfile:
-			print "Saliency cut : ",time.time()-start_time
-	"""		
-	def performSaliency(self):
+	
+	def __performSaliency__(self):
 		raise NotImplementedError;
 		
 	"""
 		Process the given input frame
 	"""
 	def process(self,cur_frame):
-		self.shape = cur_frame.shape;
-		self.quantize(cur_frame)		# sets self.q_frame
-		self.build_region()				# sets self.color,self.mean,self,freq
-		self.performSaliency();			# sets self.saliency
-		self.saliency_cut()				# sets self.mask
-		return self.mask;
+		shape = cur_frame.shape;
+		q_frame = self.__quantize__(cur_frame)						# returns q_frame
+		region_desc = self.__build_region__(q_frame)				# returns color, mean, freq
+		saliency = self.__performSaliency__(region_desc);		# returns saliency
+		return np.float32(saliency);
 	
