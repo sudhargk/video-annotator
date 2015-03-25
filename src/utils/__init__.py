@@ -44,3 +44,14 @@ def mkdirs(dirpath):
 			pass
 		else: 
 			raise
+
+"""
+	Its a dummy task object which nullifies asynchs
+"""		
+class DummyTask:
+    def __init__(self, data):
+        self.data = data
+    def ready(self):
+        return True
+    def get(self):
+        return self.data

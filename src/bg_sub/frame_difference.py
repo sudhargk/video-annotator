@@ -1,26 +1,22 @@
+from numpy import float32
+from cv2 import accumulateWeighted,convertScaleAbs
 from bg_sub import BGSubtractionImpl
 
 """
-	A Simple frame differencing approach
+	A Simple frame differencing approach when single frame given otherwise  computes moving average
 	Args:
-		threshold (int) : values [0-256] integer threshold on difference between foreground 
-					and background, default = 50
+		alpha (float) : values [0-1] specifies the importance to current frame, default 0.3
 """
 class FrameDifferencingImpl(BGSubtractionImpl):
-	def __init__(self,_nextFrame,threshold=50):
-		super(FrameDifferencingImpl,self).__init__(_nextFrame)
-		self.prev_frame = None
-		self.cur_frame = None
-		self.threshold = threshold
-	
-	def process(self):
-		if self.prev_frame is None:
-			self.prev_frame = self._nextFrame()
-			
-		self.cur_frame = self._nextFrame()
-		if self.cur_frame is None:
-			self.finish = True
-		else:
-			diff = self.frame_differencing(self.prev_frame,self.cur_frame,threshold = self.threshold)
-			self.prev_frame = self.cur_frame
-			return diff;
+	def __init__(self,alpha=0.0,threshold = 0.1):
+		super(FrameDifferencingImpl,self).__init__(threshold)
+		self.alpha = alpha;
+		
+	def process(self,cur_frame,prev_frames):
+		assert(isinstance(prev_frames,list)),"prev_frames is not a list"
+		acum_frame = float32(prev_frames[0])
+		for frame in prev_frames[1:]:
+			accumulateWeighted(float32(frame),acum_frame,self.alpha,None);
+		absScaleFrame = convertScaleAbs(acum_frame)
+		diff = self.__frame_differencing__(absScaleFrame,cur_frame)
+		return diff;

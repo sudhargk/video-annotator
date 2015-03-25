@@ -22,6 +22,15 @@ class VideoReader(object):
 				frame = cv2.resize(frame,self.resize);
 				return frame
 			return None
+	
+	def read(self,startFrame=0,numFrames=1):
+		frames = [];	self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,startFrame);
+		while(numFrames>0):
+			frame = self.read_next();
+			if frame is None:
+				break;
+			frames.extend([frame]);numFrames -=1;
+		return (frames.__len__(),frames);
 		
 	def skip_frames (self,num_frames=0):
 		frame = None;

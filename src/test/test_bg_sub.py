@@ -1,122 +1,81 @@
 import cv2,sys,os
-import cv2
 import numpy as np
 from utils import mkdirs
-from bg_sub import get_instance,BGMethods
+from bg_sub import get_instance,EIGEN_SUBSTRACTION,MOG_SUBSTRACTION,FRAME_DIFFERENCING
 from io_module.video_reader import VideoReader
 from io_module.video_writer import VideoWriter
-from sklearn.cluster import MeanShift,DBSCAN, estimate_bandwidth
+from utils import DummyTask
+import time
+from multiprocessing.pool import ThreadPool
+from collections import deque
 
-#Default values
-MIN_FRAMES_COUNT = 1000
-MIN_POINTS_TO_CLUSTER = 10
-MAX_CLUSTERS = 100
-SKIP_FRAMES = 0
-ALPHA = 0.35
-DO_CLUSTERING = False
-DO_CROPPING = False
-DO_LABELLING = True
-DO_BOUNDING_BOX = False	
-CROP_D = (80,160)
+
+def bgsub_process(bgsubImpl,frames,idx):
+	N = frames.__len__();
+	shape = frames[0].shape
+	diff = bgsubImpl.process(frames[N-1],frames[:N-1]);
+	mask = bgsubImpl.threshold_mask(diff)
+	zero_frame  = np.zeros(shape,dtype=np.float32);
+	zero_frame[:,:,2] = mask*255;
+	out_frame = cv2.addWeighted(np.float32(frames[N-1]),0.6,zero_frame,0.4,0.0)
+	return np.uint8(out_frame),idx;
 	
-def process_video(bgsubImpl,vidreader,vidwriter):
-	random_colors = np.random.randint(256, size=(MAX_CLUSTERS, 3))
-	#Clustering models
-	if DO_CLUSTERING:
-		#model = MeanShift(bandwidth=None, bin_seeding=True)
-		model = DBSCAN(eps=5, min_samples=35)
-	
-	vidreader.skip_frames(SKIP_FRAMES);
-	bgsubImpl.setShape((vidreader.height,vidreader.width))
-	
-	if DO_CROPPING:
-		vidwriter.shape = CROP_D
-	
+def process_video(bgsubImpl,vidreader,vidwriter,num_blocks=4, threaded = True):
 	vidwriter.build();
-	N = min(vidreader.num_remaining_frames(),MIN_FRAMES_COUNT)
-
-	prv_mean = None; frame_idx = 0
-	while(True):
-		frame_idx += 1;
-		mask_frame = bgsubImpl.process()
-		mask_frame = cv2.medianBlur(mask_frame,5)
-		mask_frame = cv2.medianBlur(mask_frame,3)
-		print 'Proceesing ... {0}%\r'.format((frame_idx*100/N)),
-		if bgsubImpl.isFinish() or frame_idx>MIN_FRAMES_COUNT:
+	threadn = cv2.getNumberOfCPUs();	pool = ThreadPool(processes = threadn);
+	pending = deque();	N = vidreader.frames; frameIdx = num_blocks;
+	while True:
+		while len(pending) > 0 and pending[0].ready():
+			task = pending.popleft()
+			frame, idx = task.get()
+			print 'Proceesing ... {0}%\r'.format((idx*100/N)),
+			vidwriter.write(frame);
+		if len(pending) < threadn and frameIdx < N:
+			(cnt,frames) = vidreader.read(frameIdx-num_blocks,num_blocks);
+			if cnt == num_blocks:
+				if threaded:
+					task = pool.apply_async(bgsub_process,[bgsubImpl,frames,frameIdx]);
+				else:
+					task = DummyTask(bgsub_process(bgsubImpl,frames,frameIdx));
+				pending.append(task)
+			frameIdx += 1;	
+		if len(pending) == 0:
 			break;
-			
-		img = bgsubImpl.cur_frame.copy();
 
-		if DO_CLUSTERING :		#clustering logic
-			points = np.where(mask_frame==1)
-			points = np.column_stack(points)
-			points_len = points.shape[0]
-			if points_len > MIN_POINTS_TO_CLUSTER:
-				model.fit(points);
-				for idx,lbl in zip(range(points_len),model.labels_):
-					mask_frame[points[idx][0]][points[idx][1]]=lbl+1;
-		
-		if DO_LABELLING:		#labelling logic
-			for lbl,val in enumerate(np.unique(mask_frame)):
-				if lbl == 0:
-					continue;
-				if lbl >= MAX_CLUSTERS:
-					break;
-				color = tuple(random_colors[lbl])
-				for point_x,point_y in np.column_stack(np.where(mask_frame==val)):
-					cv2.circle(img,(point_y,point_x), 2,color, 1)
-		
-		if DO_BOUNDING_BOX:		#bounding box logic
-			points =  np.column_stack(np.where(mask_frame==1))
-			if points.shape[0] > 0:
-				mean = points.mean(axis=0)
-				if not prv_mean is None:
-					mean = ALPHA*mean + (1-ALPHA)*prv_mean
-				(y,x)=np.int32(mean);
-				if x-w_crop/2>0 and x+w_crop/2<w and y-h_crop/2>0 and y+h_crop/2<h :
-					if DO_CROPPING:
-						img = img[y-h_crop/2:y+h_crop/2,x-w_crop/2:x+w_crop/2];
-					else:
-						cv2.rectangle(img,(x-w_crop/2,y-h_crop/2),(x+w_crop/2,y+h_crop/2),(255,0,0),2);
-					vidwriter.write(img);
-				prv_mean = np.int32(mean);
-		else:
-			vidwriter.write(img);
-	vidreader.close();
-	vidwriter.close()
 
 def test_bgsub_fd(inp):
 	vidreader = VideoReader(inp)
 	vidwriter = VideoWriter("test_results/bg_sub_fd.avi",vidreader.width,vidreader.height);
-	bgsub = get_instance(BGMethods.FRAME_DIFFERENCING,vidreader.read_next);
-	process_video(bgsub,vidreader,vidwriter);
-	print "Tested Background Subtraction (Frame Differencing)...    [DONE]"
+	bgsub = get_instance(FRAME_DIFFERENCING);
+	start = time.time();
+	process_video(bgsub,vidreader,vidwriter,num_blocks=2);
+	time_taken = time.time() - start;
+	print "Tested Background Subtraction (Frame Differencing)...    [DONE] in " + str(time_taken) +" seconds"
 
-def test_bgsub_ma(inp):
-	vidreader = VideoReader(inp)
-	vidwriter = VideoWriter("test_results/bg_sub_ma.avi",vidreader.width,vidreader.height);
-	bgsub = get_instance(BGMethods.MOVING_AVERAGE,vidreader.read_next);
-	process_video(bgsub,vidreader,vidwriter);
-	print "Tested Background Subtraction (Moving Average)...    [DONE]"
 
 def test_bgsub_es(inp):
 	vidreader = VideoReader(inp)
 	vidwriter = VideoWriter("test_results/bg_sub_es.avi",vidreader.width,vidreader.height);
-	bgsub = get_instance(BGMethods.EIGEN_SUBSTRACTION,vidreader.read_next);
+	bgsub = get_instance(EIGEN_SUBSTRACTION);
+	start = time.time();
 	process_video(bgsub,vidreader,vidwriter);
-	print "Tested Background Subtraction (Eigen Subtraction)...    [DONE]"
+	time_taken = time.time() - start;
+	print "Tested Background Subtraction (Eigen Subtraction)...    [DONE] in " + str(time_taken) +" seconds"
 	
 def test_bgsub_mog(inp):
 	vidreader = VideoReader(inp)
 	vidwriter = VideoWriter("test_results/bg_sub_mog.avi",vidreader.width,vidreader.height);
-	bgsub = get_instance(BGMethods.GMG_SUBSTRACTION,vidreader.read_next);
+	bgsub = get_instance(MOG_SUBSTRACTION);
+	start = time.time();
 	process_video(bgsub,vidreader,vidwriter);
-	print "Tested Background Subtraction (Mixture of Gaussian)...    [DONE]"
+	time_taken = time.time() - start;
+	print "Tested Background Subtraction (Mixture of Gaussian)...    [DONE] in " + str(time_taken) +" seconds"
 	
 def test(vid_path="../examples/videos/sample_video1.avi"):
 	mkdirs("test_results")
+	start = time.time();
 	test_bgsub_fd(vid_path);
-	test_bgsub_ma(vid_path);
 	test_bgsub_es(vid_path);
 	test_bgsub_mog(vid_path);
-	print "Tested all Background Subtraction methods ...   [DONE]"
+	time_taken = time.time() - start;
+	print "Tested all Background Subtraction methods ...   [DONE] in " + str(time_taken) +" seconds"
