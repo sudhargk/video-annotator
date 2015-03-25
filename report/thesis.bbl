@@ -1,4 +1,4 @@
-\begin{thebibliography}{3}
+\begin{thebibliography}{4}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \expandafter\ifx\csname url\endcsname\relax
   \def\url#1{{\tt #1}}\fi
@@ -16,6 +16,12 @@
   Classification (2Nd Edition)\/}.
 \newblock Wiley-Interscience, 2000.
 \newblock ISBN 0471056693.
+
+\bibitem[{KaewTraKulPong and Bowden(2002)}]{kaew}
+{\bf KaewTraKulPong, P.} and {\bf R.~Bowden}, An improved adaptive background
+  mixture model for real-time tracking with shadow detection.
+\newblock {\em In\/} {\em Video-based surveillance systems\/}. Springer, 2002,
+  135--144.
 
 \bibitem[{Piccardi(2004)}]{Piccardi04}
 {\bf Piccardi, M.}, Background subtraction techniques: a review.

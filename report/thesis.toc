@@ -1,8 +1,8 @@
 \contentsline {chapter}{ACKNOWLEDGEMENTS}{i}{chapter*.1}
 \contentsline {chapter}{ABSTRACT}{ii}{chapter*.2}
-\contentsline {chapter}{LIST OF TABLES}{iv}{chapter*.4}
-\contentsline {chapter}{LIST OF FIGURES}{v}{chapter*.5}
-\contentsline {chapter}{ABBREVIATIONS}{vi}{chapter*.6}
+\contentsline {chapter}{LIST OF TABLES}{v}{chapter*.4}
+\contentsline {chapter}{LIST OF FIGURES}{vi}{chapter*.5}
+\contentsline {chapter}{ABBREVIATIONS}{vii}{chapter*.6}
 \contentsline {chapter}{\numberline {1}INTRODUCTION}{1}{chapter.1}
 \contentsline {chapter}{\numberline {2}CONVOLUTIONAL NEURAL NETWORK}{2}{chapter.2}
 \contentsline {section}{\numberline {2.1}Why CNN\nobreakspace {}?}{2}{section.2.1}
@@ -15,7 +15,12 @@
 \contentsline {section}{\numberline {3.1}Frame Differencing}{6}{section.3.1}
 \contentsline {section}{\numberline {3.2}Eigen subtraction}{7}{section.3.2}
 \contentsline {section}{\numberline {3.3}Mixture of Gaussian}{8}{section.3.3}
-\contentsline {chapter}{\numberline {4}SAMPLE}{9}{chapter.4}
-\contentsline {section}{\numberline {4.1}Bibliography with BIBT\kern -.1667em\lower .5ex\hbox {E}\kern -.125emX\spacefactor \@m }{9}{section.4.1}
-\contentsline {section}{\numberline {4.2}Other useful \LaTeX \ packages}{9}{section.4.2}
-\contentsline {chapter}{\numberline {A}A SAMPLE APPENDIX}{10}{appendix.A}
+\contentsline {chapter}{\numberline {4}Saliecny Detection}{10}{chapter.4}
+\contentsline {section}{\numberline {4.1}Color Frequency Based}{10}{section.4.1}
+\contentsline {section}{\numberline {4.2}Contxt Aware Based}{10}{section.4.2}
+\contentsline {section}{\numberline {4.3}Spectral Distribution Based}{10}{section.4.3}
+\contentsline {section}{\numberline {4.4}Regional Contrast}{10}{section.4.4}
+\contentsline {chapter}{\numberline {5}SAMPLE}{11}{chapter.5}
+\contentsline {section}{\numberline {5.1}Bibliography with BIBT\kern -.1667em\lower .5ex\hbox {E}\kern -.125emX\spacefactor \@m }{11}{section.5.1}
+\contentsline {section}{\numberline {5.2}Other useful \LaTeX \ packages}{11}{section.5.2}
+\contentsline {chapter}{\numberline {A}A SAMPLE APPENDIX}{12}{appendix.A}

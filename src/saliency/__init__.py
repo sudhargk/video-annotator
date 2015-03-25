@@ -2,7 +2,6 @@ import cv2,time,os
 import numpy as np
 from skimage.measure import regionprops
 from skimage import  segmentation, color
-from skimage.future import graph
 from skimage.feature import greycomatrix, greycoprops
 from sklearn.feature_extraction import image
 from skimage.morphology import watershed

@@ -183,21 +183,39 @@ Our implementation is publicly made available in github\footnote{\url{https://gi
 \chapter{BACKGROUND SUBTRACTION TECHNIQUES} 
 In order to identify multiple events occurring simultaneously, we extract temporal volumes by  bounding the visual field corresponding to the event. Extracted temporal volumes are fed to a three dimensional CNN to identify the corresponding event. 
 \par Event localization can be performed by determining the position with pixel changes and understanding the motion relativity as discussed in ~\cite{Basharat08}, where all components corresponding to an event show a similar flow of pixels. Following approach works significantly well in surveillance data but fails terribly in case human event detection. Later realized that, if we eliminate the background(static parts) of the visual frame, remaining would correspond to possible event locations. After background subtraction, we segment the visual frame and build temporal volumes corresponding to different events.
-Several background subtraction technique are eminent in the literature ~\cite{Piccardi04}, among these some apply on static image while others on dynamic video. In case of our application we can blend both these approaches to generate more reliable event detectors.
+Several background subtraction technique are eminent in the \cite{Piccardi04}, among these some apply on static image while others on dynamic video. In case of our application we can blend both these approaches to generate more reliable event detectors.
 \section{Frame Differencing}
-A very common approach for performing the moving object segmentation is using frame differencing but these approach is very sensitive to small changes and yields lots of noise. We can also replace difference of a single previous frame  by an average of multiple previous frames, yet is very noisy and not reliable.
+A very common approach for performing the moving object segmentation is using frame differencing but these approach is very sensitive to small changes and yields lots of noise when a camera is in motion. A simplest way to implement this technique is by computing the absolute difference of gray scale/intesity values two consecutive frames. Consider $P(p_x,p_y,t)$, intesity of pixel $(p_x,p_y)$ at frame t, then pixel $(p_x,p_y)$ that is considered foreground when absolute difference is above a threshold,$$\vert P(p_x,p_y,t+1) - P(p_x,p_y,t)t\vert > T$$.
+\par The robustness of this method depends on speed of forground elements. Faster movements may require higher thresholds to reduce the noise.  An alternate approach is to replace difference of a single previous frame  by an average of multiple previous frames, still results are noisy and not reliable.
 \section{Eigen subtraction}
 An alternate approach named eigen background subtraction was seen to be more elegant. A sample of N images of the videos are obtained, mean background image $\nu_b$ is computed and all mean normalized images $X$. Then we perform principal component analysis on the mean normalized images, idea is, that a high-dimensional images are often described by correlated variables and only a few meaningful dimensions account for most of the information. But performing PCA is not straightforward, consider 100 images of dimension 100x100 pixels, then the dimension of generated covariance matrix would be 10000x10000, i.e roughly 0.8 GB (considering 64 bit float values). Solving this is not feasible, hence we apply a trick from linear algebra that for a MXN matrix with $M>N$, we can at most have N-1 non-zero eigen values ~\cite{Duda01}. So we perform eigen decomposition of $X^TX$:
 $$X^TX\nu_i=\lambda_i\nu_i$$
 $$XX^T(X\nu_i)=\lambda_i(X\nu_i)$$
 Hence the orthonormal eigen vector of $XX^T$ is found out by normalizing $X\nu_i$ to unit length. Once eigen vectors of $XX^T$  are computed, we project the current frame $F$ on the eigen vector with top eigen values, and the reconstructed frame $F'$ is obtained by using the projection coefficients and the eigen vectors. The difference $F-F'$ would correspond to the mask on the moving object. 
 \section{Mixture of Gaussian}
-This is one of the well known method of extracting foreground information. Add more details
+This is one of the well known method of extracting foreground information. \cite{kaew} model each background pixel by a mixture of N Gaussian distributions. The weights of the mixture represent the time proportions that those colors stay in the scene. The probable background colors are the ones which stay longer and more static. At any instance $i$ a particular pixel $(p_x,p_y)$ has color space represented as $V(p_{x},p_{y},i)$, history of the pixels are given by 
+$$X_{1},..,X_{t} = {V(p_{x},p_{y},i)~:~1\le i \le t }$$
+The history is modeled by mixture of N gaussian mixtures,
+$$P(X_{t})=\Sigma_{i}^{N}w_{(i,t)}\eta(X_{t},\mu_{(i,t)},\Sigma_{(i,t)})$$
+\par $w_{(i,t)}$,$\mu_{(i,t)}$,$\Sigma_{(i,t)}$ are weight,mean and covariance of the $i^{th}$ Gaussian in the mixture at time $t$ respectively and where $\eta$ is gaussian density function. General principle behind this approach is that when a new object occludes the background object, it will not match one of the existing distributions. Instead willl result in either the creation of a new dis-tribution or the increase in the variance of an existing distribution. The variance of the moving object is expected to remain larger than a background pixel until the moving object stops.
+
 \par Results of foreground mask obtained using moving average and eigen subtraction methods are shown in Figure \ref{fig:bgsub}.
 \chapter{Saliecny Detection}
-As we had discussed earlier about the different techniques to extract the eminent pixels which are in motion, some other pixels which are stationary but which are quite distinct might also play a important role in the the activity recognition. We would discuss different techniques for saliency of different pixels.
-\section{Regional Contrast}
+As we had discussed earlier about the different techniques to extract the eminent pixels which are in motion, some other pixels which are stationary and quite distinct might also play a important role in the the activity recognition. These approaches are considered during the process attention modelling. Most of saliency techniques have got  a common process,
+\begin{enumerate}
+	\item{Color equalization}
+	\item{Slic-based segmentation}
+	\item{Extract segment properties}
+	\item{Compute saliency}
+	\item{Thresholding the saliency map}
+\end{enumerate} 
+\par Some of the distiguished saliency estimation techniques are discussed below. 
+\section{Color Frequency Based}
 
+
+\section{Contxt Aware Based}
+\section{Spectral Distribution Based}
+\section{Regional Contrast}
 
 
 
