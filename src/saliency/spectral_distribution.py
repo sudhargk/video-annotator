@@ -6,7 +6,7 @@ from sklearn.mixture import GMM as GMM
 
 class SpectralDistribution(Saliency):
 	def __init__(self,properties):
-		self.components = 40;
+		self.components = 10;
 		super(SpectralDistribution, self).__init__(properties);
 		self.method = "sd"
 		
@@ -15,7 +15,7 @@ class SpectralDistribution(Saliency):
 		(num_regions,regions,region_props,data) = region_desc
 		frame_shape = regions.shape;
 		
-		gmm = GMM(n_components=self.components,covariance_type='full',random_state=1);
+		gmm = GMM(n_components=self.components,covariance_type='diag',random_state=1);
 		gmm.fit(data); 	prob = np.transpose(gmm.predict_proba(data))
 		prob_norm = 1/np.sum(prob+0.000000001,1);
 		prob_mean = np.dot(prob,region_props[0])*prob_norm[:,None]

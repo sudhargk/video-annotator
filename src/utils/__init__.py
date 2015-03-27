@@ -30,6 +30,12 @@ def pdist2(A,B):
 	B_2 = np.outer(np.ones(A.shape[0]),np.sum(np.square(B),1))
 	AoutB = np.dot(A,B.transpose())
 	return np.sqrt(A_2 + B_2 - 2*AoutB)
+	
+def getDirectories(path):
+	"""Return a list of directories name on the specifed path"""
+	return [file for file in os.listdir(path)
+			if os.path.isdir(os.path.join(path, file))]
+
 
 """
 	Creates directory if dirpath is valid or 

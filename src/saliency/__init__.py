@@ -12,6 +12,10 @@ from features.color import LAB,GRAY
 from utils import mkdirs
 from scipy import ndimage
 from utils import normalize
+from skimage.morphology import remove_small_objects
+from scipy.ndimage.morphology import binary_fill_holes
+
+KERNEL = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3));
 
 """
 	Factory method for different saliency methdds.
@@ -62,7 +66,7 @@ class SaliencyMethods(object):
 		doCUT (bool) : perform grab cut operations, default False,
 """			
 class SaliencyProps(object):
-	def __init__(self, num_superpixels = 400,compactness = 40, threshold = 0.8, doProfile = False,
+	def __init__(self, num_superpixels = 200,compactness = 40, threshold = 0.8, doProfile = False,
 						useLAB=True,useColor=True,useTexture=False,doCUT=True):
 		self.num_superpixels = num_superpixels
 		self.compactness = compactness
@@ -121,7 +125,7 @@ class Saliency(object):
 		Returns :
 			Texture properties
 	"""
-	def __extract_texture__(self,frame,regions,region_props,useGLCM=False,useEigen=True):
+	def __extract_texture__(self,frame,regions,region_props,useGLCM=True,useEigen=True):
 		num_regions = len(np.unique(regions));
 		gray = GRAY(frame)
 		texture_data_glcm = None; texture_data_eig = None
@@ -188,12 +192,42 @@ class Saliency(object):
 			print "Build region (preprocess) : ",time.time()-start_time
 	
 		return (num_regions,regions,region_props,data);
+	
+	def __morph_ops__(self,mask):
+		mask = cv2.medianBlur(np.uint8(mask),3)
+		mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, KERNEL)
+		mask = cv2.medianBlur(mask,3)
+		mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE,KERNEL)
+		mask = binary_fill_holes(mask)
+		mask = remove_small_objects(mask,min_size=128,connectivity=2)
+		return np.uint8(mask);
+	
 	"""
 		Performs saliency cut using the grab cut algorithm, if doCUT set false then it just applies threshold
 	"""
-	
 	def saliency_cut(self,frame,saliency,max_iters = 1):
 		_,mask = cv2.threshold(saliency,self.props.threshold,1,cv2.THRESH_BINARY);
+		
+		bgdModel = np.zeros((1,65),np.float64); fgdModel = np.zeros((1,65),np.float64)
+		mask = np.zeros(frame.shape[:2],np.uint8)
+		mask[saliency >= 0.2] = 2
+		mask[saliency >= 0.5] = 3
+		mask[saliency >= 0.8] = 1
+		cv2.grabCut(frame,mask,None,bgdModel,fgdModel,1,cv2.GC_INIT_WITH_MASK)
+		mask = np.where((mask==0)|(mask==2),0,1);
+		mask = self.__morph_ops__(mask);
+		"""
+		(lbls,num) = label(mask,connectivity=2,neighbors=4,return_num=True,background=0)
+		out_mask = np.zeros(frame.shape[:2],np.bool);
+		for lbl in range(np.max(lbls)+1):
+			pixels = np.where(lbls==lbl); _max = np.max(pixels,1); _min = np.min(pixels,1)
+			area = np.prod(_max - _min);
+			if  (4 * np.sum(mask[_min[0]:_max[0],_min[1]:_max[1]]) > area):
+				in_mask = mask.copy(); rect = (_min[0],_min[1],_max[0],_max[1])
+				cv2.grabCut(frame,in_mask,rect,bgdModel,fgdModel,1,cv2.GC_INIT_WITH_RECT);
+				out_mask = out_mask|np.where((in_mask==0)|(in_mask==2),False,True)
+		mask = np.uint8(out_mask)
+		"""
 		return mask
 			
 	
