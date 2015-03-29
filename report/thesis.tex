@@ -201,21 +201,22 @@ $$P(X_{t})=\Sigma_{i}^{N}w_{(i,t)}\eta(X_{t},\mu_{(i,t)},\Sigma_{(i,t)})$$
 
 \par Results of foreground mask obtained using moving average and eigen subtraction methods are shown in Figure \ref{fig:bgsub}.
 \chapter{Saliecny Detection}
-As we had discussed earlier about the different techniques to extract the eminent pixels which are in motion, some other pixels which are stationary and quite distinct might also play a important role in the the activity recognition. These approaches are considered during the process attention modelling. Most of saliency techniques have got  a common process,
+Visual saliency is the distinct subjective perceptual quality which makes some items in the world stand out from their neighbors and immediately grab our attention.
+As we had discussed earlier about the different techniques to extract the eminent pixels which are in motion, sometimes pixels which are stationary and quite distinct might also play a important role in the the activity recognition. These approaches are considered during the process attention modelling. Most of saliency estimations techniques in literature have got a common process,
 \begin{enumerate}
-	\item{Color equalization}
-	\item{Slic-based segmentation}
-	\item{Extract segment properties}
-	\item{Compute saliency}
-	\item{Thresholding the saliency map}
+	\item{\textbf{Color equalization:} It is done by removing the tail in the color histogram. This helps to improve the contrast in an image. In our implmentation color equalization is done on each channel separetely so that all channels can be provided to the clustering algorithm.}
+	\item{\textbf{SLIC-based segmentation:}  It is a simple linear iterative clustering that clusters pixels in the combined five-dimensional color and image plane space to efficiently generate compact, nearly uniform superpixels. Any slic based clustering algorithm takes two parameters number of super-pixels and compactness of each superpixel. According to \cite{slic}, slic is fastest and most memory efficient compared to  other segmentation technique like graph-cut, quick shift segmentation technques. Segmentation reduces the number of computation in the subsequent stages}
+	\item{\textbf{Extract segment properties:} Extracting features of the region that are used in computing the saliecny of each regions. Some features that are considered in our implementation are color based features (LAB,RGB) and texture based features (GLCM,Texture Flow)}
+	\item{\textbf{Compute~saliency:} Saliecny estimation techniques can be broadly categprozed into bottom-up, top-down and information maximization based on algorithmic computation. Earliest saliency based attention modelling was proposed by \cite{itti}. It was inspired by the behavior and the neuronal architecture of the early primate visual system.}
+	\item{\textbf{Saliency cut:} Saliency maps are generally thresholded to obtain the salient mask. In the implementation, grab-cut\citep{grabcut} performs segmentation by modeling foreground and background based on saliency estimation to obtain the mask. We considered higher saliency  correspond to foreground while lower saliency correspond to background. After getting the saliency mask we apply few morphological operation to remove the salt and pepper noise}
 \end{enumerate} 
 \par Some of the distiguished saliency estimation techniques are discussed below. 
 \section{Color Frequency Based}
-
-
+It is top-down approad in which we compute 
 \section{Contxt Aware Based}
 \section{Spectral Distribution Based}
 \section{Regional Contrast}
+
 
 
 
@@ -258,13 +259,6 @@ As we had discussed earlier about the different techniques to extract the eminen
 
 \chapter*{Publications}
 \vspace{-0.3cm}
-
-\begin{enumerate}
-\item S. M. Narayanamurthy and B. Ravindran (2007). \newblock
-  Efficiently Exploiting Symmetries in Real Time Dynamic Programming. \newblock {\em
-  IJCAI 2007, Proceedings of the 20th International Joint Conference on
-  Artificial Intelligence}, pages 2556--2561.
-\end{enumerate}
 
 %\nocite{bellman, Amarel:1968, manning, knoblock90learning,
 %crawford92theoretical, Barto:rtdp, Ravindran:proof}

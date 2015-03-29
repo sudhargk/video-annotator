@@ -1,8 +1,16 @@
-\begin{thebibliography}{4}
+\begin{thebibliography}{6}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \expandafter\ifx\csname url\endcsname\relax
   \def\url#1{{\tt #1}}\fi
 \expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL }\fi
+
+\bibitem[{Achanta {\em et~al.\/}(2012)Achanta, Shaji, Smith, Lucchi, Fua, and
+  Susstrunk}]{slic}
+{\bf Achanta, R.}, {\bf A.~Shaji}, {\bf K.~Smith}, {\bf A.~Lucchi}, {\bf
+  P.~Fua}, and {\bf S.~Susstrunk} (2012).
+\newblock Slic superpixels compared to state-of-the-art superpixel methods.
+\newblock {\em Pattern Analysis and Machine Intelligence, IEEE Transactions
+  on\/}, {\bf 34}(11), 2274--2282.
 
 \bibitem[{Basharat {\em et~al.\/}(2008)Basharat, Zhai, and Shah}]{Basharat08}
 {\bf Basharat, A.}, {\bf Y.~Zhai}, and {\bf M.~Shah} (2008).
@@ -16,6 +24,12 @@
   Classification (2Nd Edition)\/}.
 \newblock Wiley-Interscience, 2000.
 \newblock ISBN 0471056693.
+
+\bibitem[{Itti {\em et~al.\/}(1998)Itti, Koch, and Niebur}]{itti}
+{\bf Itti, L.}, {\bf C.~Koch}, and {\bf E.~Niebur} (1998).
+\newblock A model of saliency-based visual attention for rapid scene analysis.
+\newblock {\em IEEE Transactions on pattern analysis and machine
+  intelligence\/}, {\bf 20}(11), 1254--1259.
 
 \bibitem[{KaewTraKulPong and Bowden(2002)}]{kaew}
 {\bf KaewTraKulPong, P.} and {\bf R.~Bowden}, An improved adaptive background
