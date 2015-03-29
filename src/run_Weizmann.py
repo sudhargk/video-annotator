@@ -41,7 +41,7 @@ def compareWithGroundtruth(sal,datasetPath,imageName):
 def processFolder(datasetPath):
 	stats = Stats(datasetPath) 
 	props = SaliencyProps()
-	sal = sal_instance(SaliencyMethods.COLOR_FREQUENCY,props);
+	sal = sal_instance(SaliencyMethods.REGION_CONTRAST,props);
 	for category in getDirectories(datasetPath):
 		stats.addCategories(category)
 		categoryPath = os.path.join(datasetPath,category)

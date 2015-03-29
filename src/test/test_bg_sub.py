@@ -1,7 +1,7 @@
 import cv2,sys,os
 import numpy as np
 from utils import mkdirs
-from bg_sub import get_instance,EIGEN_SUBSTRACTION,MOG_SUBSTRACTION,FRAME_DIFFERENCING
+from bg_sub import get_instance,BGMethods
 from io_module.video_reader import VideoReader
 from io_module.video_writer import VideoWriter
 from utils import DummyTask
@@ -20,7 +20,7 @@ def bgsub_process(bgsubImpl,frames,idx):
 	out_frame = cv2.addWeighted(np.float32(frames[N-1]),0.6,zero_frame,0.4,0.0)
 	return np.uint8(out_frame),idx;
 	
-def process_video(bgsubImpl,vidreader,vidwriter,num_blocks=4, threaded = True):
+def process_video(bgsubImpl,vidreader,vidwriter,num_blocks=4, threaded = False):
 	vidwriter.build();
 	threadn = cv2.getNumberOfCPUs();	pool = ThreadPool(processes = threadn);
 	pending = deque();	N = vidreader.frames; frameIdx = num_blocks;
@@ -28,8 +28,8 @@ def process_video(bgsubImpl,vidreader,vidwriter,num_blocks=4, threaded = True):
 		while len(pending) > 0 and pending[0].ready():
 			task = pending.popleft()
 			frame, idx = task.get()
-			print 'Proceesing ... {0}%\r'.format((idx*100/N)),
 			vidwriter.write(frame);
+			print 'Proceesing ... {0}%\r'.format((idx*100/N)),	
 		if len(pending) < threadn and frameIdx < N:
 			(cnt,frames) = vidreader.read(frameIdx-num_blocks,num_blocks);
 			if cnt == num_blocks:
@@ -46,7 +46,7 @@ def process_video(bgsubImpl,vidreader,vidwriter,num_blocks=4, threaded = True):
 def test_bgsub_fd(inp):
 	vidreader = VideoReader(inp)
 	vidwriter = VideoWriter("test_results/bg_sub_fd.avi",vidreader.width,vidreader.height);
-	bgsub = get_instance(FRAME_DIFFERENCING);
+	bgsub = get_instance(BGMethods.FRAME_DIFFERENCING);
 	start = time.time();
 	process_video(bgsub,vidreader,vidwriter,num_blocks=2);
 	time_taken = time.time() - start;
@@ -56,7 +56,7 @@ def test_bgsub_fd(inp):
 def test_bgsub_es(inp):
 	vidreader = VideoReader(inp)
 	vidwriter = VideoWriter("test_results/bg_sub_es.avi",vidreader.width,vidreader.height);
-	bgsub = get_instance(EIGEN_SUBSTRACTION);
+	bgsub = get_instance(BGMethods.EIGEN_SUBSTRACTION);
 	start = time.time();
 	process_video(bgsub,vidreader,vidwriter);
 	time_taken = time.time() - start;
@@ -65,7 +65,7 @@ def test_bgsub_es(inp):
 def test_bgsub_mog(inp):
 	vidreader = VideoReader(inp)
 	vidwriter = VideoWriter("test_results/bg_sub_mog.avi",vidreader.width,vidreader.height);
-	bgsub = get_instance(MOG_SUBSTRACTION);
+	bgsub = get_instance(BGMethods.MOG_SUBSTRACTION);
 	start = time.time();
 	process_video(bgsub,vidreader,vidwriter);
 	time_taken = time.time() - start;

@@ -24,13 +24,14 @@ class VideoReader(object):
 			return None
 	
 	def read(self,startFrame=0,numFrames=1):
-		frames = [];	self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,startFrame);
+		frames = [];	self.read_frames = startFrame - 1
+		self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,startFrame);
 		while(numFrames>0):
 			frame = self.read_next();
-			if frame is None:
+			if frame is None:# or self.read_frames > self.frames:
 				break;
 			frames.extend([frame]);numFrames -=1;
-		return (frames.__len__(),frames);
+		return (len(frames),frames);
 		
 	def skip_frames (self,num_frames=0):
 		frame = None;

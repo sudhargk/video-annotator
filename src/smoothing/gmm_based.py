@@ -44,6 +44,7 @@ class GMMBased(Smoothing):
 			self.fg_gmm.means_ = fg_means;		self.bg_gmm.means_ = bg_means;
 			self.fg_gmm.covars_ = fg_covars;	self.bg_gmm.covars_ = bg_covars;
 			self.fg_gmm.weights_ = fg_weights;	self.bg_gmm.weights_ = bg_weights;
+			
 		self.fg_gmm.fit(fg_mask_feats);
 		self.bg_gmm.fit(bg_mask_feats);
 		return (self.fg_gmm,self.bg_gmm);
@@ -54,23 +55,7 @@ class GMMBased(Smoothing):
 		bg_score = gmm[1].score(frame_feats)
 		frames_mask =  ( fg_score> bg_score).reshape((shape[0],shape[1]))
 		return np.uint8(frames_mask);
-		"""
-		bgdModel = np.zeros((1,65),np.float64); fgdModel = np.zeros((1,65),np.float64)
-		fg_score = gmm[0].score(frame_feats)
-		bg_score = gmm[1].score(frame_feats)
-		fg_prob =  (normalize((fg_score - bg_score))).reshape((shape[0],shape[1]))
-		_,mask = cv2.threshold(np.float32(fg_prob),0.6,1,cv2.THRESH_BINARY)
-		pixels = np.where(mask==1); _max = np.max(pixels,1); _min = np.min(pixels,1)
-		rect = np.array([_min[1],_min[0],_max[1]-_min[1],_max[0]-_min[0]],dtype=np.float32);
-		rect = tuple(rect)
-		mask_cut = np.zeros(block.shape[:2],np.uint8)
-		mask_cut[fg_prob >= 0.3] = 2
-		mask_cut[fg_prob >= 0.5] = 3
-		mask_cut[fg_prob >= 0.7] = 1
-		cv2.grabCut(block,mask_cut,None,bgdModel,fgdModel,1,cv2.GC_INIT_WITH_MASK)
-		frames_mask = np.float32(np.where((mask_cut==2)|(mask_cut==0),0,1))
-		return np.uint8(frames_mask);
-		"""
+		
 	
 	def eigenSmoothing(self,blockFgMasks,numVectors = 4):
 		numBlocks = blockFgMasks.__len__();shape = blockFgMasks[0].shape
@@ -95,9 +80,7 @@ class GMMBased(Smoothing):
 		blockFeats = np.vstack([self.feats(block) for block in blocks])
 		blockFgMask = np.hstack([mask.flatten() for mask in fgMasks])
 		blockBgMask = np.hstack([mask.flatten() for mask in bgMasks])
-		#start_time = time.time();
 		gmm = self.__build_model__(blockFeats[blockFgMask==1,:],blockFeats[blockBgMask==1,:]);
-		#print "building model : ",time.time()-start_time	
 		if smoothFrames is None:
 			smoothFrames = range(numBlocks);
 		else:

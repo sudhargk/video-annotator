@@ -3,9 +3,10 @@ from features.color import GRAY
 from utils import normalize
 from numpy import float32
 
-FRAME_DIFFERENCING =1;
-EIGEN_SUBSTRACTION=2;
-MOG_SUBSTRACTION = 3;
+class BGMethods(object):
+	FRAME_DIFFERENCING =1;
+	EIGEN_SUBSTRACTION=2;
+	MOG_SUBSTRACTION = 3;
 
 """
 	Factory method for generating instance of background subtraction technique
@@ -20,13 +21,13 @@ MOG_SUBSTRACTION = 3;
 		Not Implemented error
 """
 def get_instance(method):
-	if method == FRAME_DIFFERENCING:
+	if method == BGMethods.FRAME_DIFFERENCING:
 		from bg_sub.frame_difference import FrameDifferencingImpl
 		return FrameDifferencingImpl();
-	elif method == EIGEN_SUBSTRACTION:	
+	elif method == BGMethods.EIGEN_SUBSTRACTION:	
 		from bg_sub.eigen_sub import EigenBGSubImpl
 		return EigenBGSubImpl();
-	elif method == MOG_SUBSTRACTION:
+	elif method == BGMethods.MOG_SUBSTRACTION:
 		from bg_sub.gaussian_mixture import BackgroundSubtractorMOGImpl
 		return BackgroundSubtractorMOGImpl();
 	else:
