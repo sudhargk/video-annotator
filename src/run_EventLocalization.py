@@ -113,8 +113,7 @@ def write_video(vidreader,out_path,num_prev_frames,num_blocks,smoothMasks):
 
 def open_write_header(extract_path,shape,window):
 	create_folder_structure_if_not_exists(extract_path);
-	_file = open(extract_path,'w');		num_features = np.prod(shape)*window;
-	_file.write(str(num_features));		_file.write(os.linesep)
+	_file = open(extract_path,'w');
 	return _file;
 	
 def extract_feats(vidreader,extract_path,num_prev_frames,num_blocks,smoothMasks,window=5,overlap=2):
