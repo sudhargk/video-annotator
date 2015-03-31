@@ -1,6 +1,6 @@
 import cv2
 class VideoReader(object):
-	def __init__(self,filename,resize=(160,120)):
+	def __init__(self,filename,resize=(120,90)):
 		self.filename = filename;
 		self.cap = cv2.VideoCapture(filename) 
 		self.resize = resize

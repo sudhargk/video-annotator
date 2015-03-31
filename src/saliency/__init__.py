@@ -66,7 +66,7 @@ class SaliencyMethods(object):
 		doCUT (bool) : perform grab cut operations, default False,
 """			
 class SaliencyProps(object):
-	def __init__(self, num_superpixels = 200,compactness = 40, threshold = 0.8, doProfile = False,
+	def __init__(self, num_superpixels = 50,compactness = 20, threshold = 0.8, doProfile = False,
 						useLAB=True,useColor=True,useTexture=False,doCUT=True):
 		self.num_superpixels = num_superpixels
 		self.compactness = compactness

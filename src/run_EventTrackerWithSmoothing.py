@@ -35,27 +35,67 @@ def __morphologicalOps__(masks):
 	return np.uint8(new_masks);
 
 
-def detect_object(newMask,oldMask=None):
+def detect_object(newMask,oldMask=None,delta = 10):
 	window = []; (lbls,num) = label(newMask,connectivity=2,neighbors=4,return_num=True,background=0)
 	for lbl in range(np.max(lbls)+1):
 		pixels = np.where(lbls==lbl); _max = np.max(pixels,1); _min = np.min(pixels,1)
 		area = np.prod(_max - _min);
 		if  (4 * np.sum(newMask[_min[0]:_max[0],_min[1]:_max[1]]) > area) and \
 			((oldMask is None) or (np.sum(oldMask[_min[0]:_max[0],_min[1]:_max[1]]) > 10)):
-			rect = np.array([_min[1],_min[0],_max[1],_max[0]],dtype=np.uint8);
+			rect = np.array([_min[1],_min[0],_max[1],_max[0]],dtype=int);
 			window.extend([rect]);
+	
+	if (len(window)>1):				#mergin along x-axis
+		order = np.array(window)[:,0].argsort(); prev_idx = 0; cur_idx = 1;
+		new_window = [window[order[0]]];
+		while(cur_idx < len(window)):
+			if new_window[prev_idx][2] + delta > window[order[cur_idx]][0] and \
+				((new_window[prev_idx][1] < window[order[cur_idx]][3] and new_window[prev_idx][1] > window[order[cur_idx]][1]) or \
+				(new_window[prev_idx][3] < window[order[cur_idx]][3] and new_window[prev_idx][3] > window[order[cur_idx]][1])):
+				new_window[prev_idx][2]= max(new_window[prev_idx][2],window[order[cur_idx]][2]);
+				new_window[prev_idx][1]= min(new_window[prev_idx][1],window[order[cur_idx]][1]);
+				new_window[prev_idx][3]= max(new_window[prev_idx][3],window[order[cur_idx]][3]);
+			else:
+				new_window.extend([window[order[cur_idx]]])
+				prev_idx += 1
+			cur_idx += 1;
+		window = new_window;
+	if (len(window)>1):						#mergin along y-axis 
+		order = np.array(window)[:,1].argsort(); prev_idx = 0; cur_idx = 1;
+		new_window = [window[order[0]]];
+		while(cur_idx < len(window)):
+			if new_window[prev_idx][3] + delta > window[order[cur_idx]][1] and \
+				((new_window[prev_idx][0] < window[order[cur_idx]][2] and new_window[prev_idx][0] > window[order[cur_idx]][0]) or \
+				(new_window[prev_idx][2] < window[order[cur_idx]][2] and new_window[prev_idx][2] > window[order[cur_idx]][0])):
+				new_window[prev_idx][2]= max(new_window[prev_idx][2],window[order[cur_idx]][2]);
+				new_window[prev_idx][1]= min(new_window[prev_idx][1],window[order[cur_idx]][1]);
+				new_window[prev_idx][3]= max(new_window[prev_idx][3],window[order[cur_idx]][3]);
+			else:
+				new_window.extend([window[order[cur_idx]]])
+				prev_idx += 1
+			cur_idx += 1;
+		window = new_window;
+	
 	return window;
 	
 def write_block(vidwriter,frame,newMask,oldMask,windows,window_lbl):
+	kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(7,7))
+	newMask = cv2.dilate(newMask,kernel,iterations = 2)
 	zero_frame  = np.zeros((newMask.shape[0],newMask.shape[1],3),dtype=np.float32);
 	zero_frame[:,:,2] = np.float32(oldMask*255);
 	out_frame1 = cv2.addWeighted(np.float32(frame),0.6,zero_frame,0.4,0.0);
 	out_frame2 = frame
-	for (idx,window) in enumerate(windows):
-		cv2.rectangle(out_frame2, (window[0],window[1]), (window[2],window[3]), tuple(RANDOM_COLORS[window_lbl[idx],:]))
-		cv2.putText(out_frame2,str(window_lbl[idx]), ((window[0],window[1])), cv2.FONT_HERSHEY_DUPLEX, 0.25, 255)
-	zero_frame[:,:,2] = np.float32(newMask*255);
-	out_frame2 = cv2.addWeighted(np.float32(frame),0.6,zero_frame,0.4,0.0);
+	"""
+	#zero_frame  = np.zeros((newMask.shape[0],newMask.shape[1]),dtype=np.float32);
+	#for (idx,window) in enumerate(windows):
+	#	zero_frame[window[1]:window[3],window[0]:window[2]] = newMask[window[1]:window[3],window[0]:window[2]];
+		#cv2.rectangle(out_frame2, (window[0],window[1]), (window[2],window[3]), tuple(RANDOM_COLORS[window_lbl[idx],:]))
+		#zero_frame[window[1]:window[3],window[0]:window[2]] = 1;
+		#cv2.putText(out_frame2,str(window_lbl[idx]), ((window[0]+window[2])/2,(window[1]+window[3])/2), cv2.FONT_HERSHEY_DUPLEX, 0.25, 255)
+	#zero_frame[:,:] = np.float32(newMask);
+	#out_frame2 = cv2.addWeighted(np.float32(frame),0.6,zero_frame,0.4,0.0);
+	"""
+	out_frame2 = frame * newMask[:,:,None]
 	out_frame = np.hstack((out_frame1,out_frame2))
 	vidwriter.write(np.uint8(out_frame))
 
@@ -67,9 +107,9 @@ def compute_fgbg_masks(vidreader,sal,bg,num_prev_frames=1,threaded=False,num_blo
 		while _idx<num_frames:
 			prev_frames = frames[_idx-num_prev_frames:_idx]
 			bg_variation = bg.process(frames[_idx],prev_frames);
-			saliency = sal.process(frames[_idx]);	_idx += 1;
-			saliency_prob =  normalize(bg_variation  + saliency);
-			_,fgmask = cv2.threshold(saliency_prob,0.6,1,cv2.THRESH_BINARY)
+			saliency = sal.process(frames[_idx]);	
+			_idx += 1;	saliency_prob =  normalize(6*bg_variation  + 4*saliency);
+			_,fgmask = cv2.threshold(saliency_prob ,0.6,1,cv2.THRESH_BINARY)
 			_,bgmask = cv2.threshold(bg_variation,0.1,1,cv2.THRESH_BINARY_INV)
 			fgMasks.extend([fgmask]); bgMasks.extend([bgmask])
 		return (frameIdx,fgMasks,bgMasks);
@@ -116,12 +156,12 @@ def perform_smoothing(vidreader,smoothner,fgMasks,bgMasks,num_blocks=4,skip_fram
 	return frameNewMasks;
 
 
-def process(vidreader,out_path,sal,bg,smoothner,num_prev_frames=1,num_blocks=4,threaded=False):
+def process(vidreader,out_path,sal,bg,smoothner,num_prev_frames=3  ,num_blocks=4,threaded=False):
 	fgMasks,bgMasks = compute_fgbg_masks(vidreader,sal,bg,num_prev_frames,threaded);
 	smoothMasks = perform_smoothing(vidreader,smoothner,fgMasks,bgMasks,num_blocks,num_prev_frames);
-	
 	tracker = tracker_instance(0);  start = time.time(); 
 	vidwriter = VideoWriter(out_path,2*vidreader.width,vidreader.height)
+	
 	vidwriter.build();	vidreader.__reset__();	N = vidreader.frames;
 	vidreader.skip_frames(num_prev_frames + num_blocks/2); frame_idx = 0	
 	numFrames= len(smoothMasks);
@@ -138,15 +178,18 @@ def process(vidreader,out_path,sal,bg,smoothner,num_prev_frames=1,num_blocks=4,t
 	print "Tracking .... [DONE] in ",time_taken," seconds"
 
 
-if __name__ == "__main__":
-	import sys;	
-	if sys.argv.__len__()<=1:
-		print "input path not provided........."
-	else :
-		inp = sys.argv[1];
-		out = "test_results/final.avi";
-		vidreader = VideoReader(inp)
-		sal = sal_instance(SaliencyMethods.REGION_CONTRAST,SaliencyProps())	
-		bg = get_instance(BGMethods.FRAME_DIFFERENCING);
-		smoothner = smooth_instance(feats,SmoothMethods.GMM_BASED);
-		process(vidreader,out,sal,bg,smoothner)
+if __name__ == "__main__":	
+	import argparse
+	parser = argparse.ArgumentParser(description='Event tracking algorithm using saliency and bg subtraction')
+	parser.add_argument("input",nargs='?',help = "input path",default="../examples/videos/sample_video1.avi");
+	parser.add_argument("output",nargs='?',help = "output path",default="test_results/final.avi");
+	parser.add_argument("--bg",nargs='?',help = "background subtraction method 1-FD, 2-ES, 3-MG default-2",default=1,type=int);
+	parser.add_argument("--sal",nargs='?',help = "saliency method 1-CF, 2-CA, 3-RC, 4-SD default-3",default=3,type=int);
+	parser.add_argument("--smoothner",nargs='?',help = "smoothing method 1-Eigen, 2-GMM, 3-SSL,  default-2",default=2,type=int);
+	args = parser.parse_args()
+	inp = args.input;	out = args.output
+	vidreader = VideoReader(inp)
+	sal = sal_instance(args.sal,SaliencyProps())	
+	bg = get_instance(args.bg);
+	smoothner = smooth_instance(feats,args.smoothner);
+	process(vidreader,out,sal,bg,smoothner)

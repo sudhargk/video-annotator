@@ -61,3 +61,16 @@ class DummyTask:
         return True
     def get(self):
         return self.data
+
+
+def create_folder_structure_if_not_exists(filepath):
+	import os,errno
+	try:
+		path = os.path.dirname(filepath)
+		os.makedirs(path)
+	except OSError as exc: # Python >2.5
+		if exc.errno == errno.EEXIST and os.path.isdir(path):
+			pass
+		else:
+			raise
+	return path
