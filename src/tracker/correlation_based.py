@@ -25,7 +25,8 @@ class CorrelationBased(Tracker):
 		hist_val = cv2.calcHist([hsv_roi],[0],None,[self.n_bins],[HSV_LOW,HSV_MAX]).flatten()
 		return np.hstack((normalize(hist_val),shape_val,center_dist));
 		
-	def track_object(self,frame,frameWindow,mask):
+	def track_object(self,frame,mask):
+		frameWindow = self.__detect_object__(mask);
 		shape = frame.shape[:2];
 		hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 		if self.activeWindowFeats is None:
@@ -79,7 +80,7 @@ class CorrelationBased(Tracker):
 				marker[idx]=self.nextIdx;
 				self.windowCounters.extend([1]); 
 				self.nextIdx += 1;
-		return marker;
+		return (frameWindow,marker);
 		
 		
 		

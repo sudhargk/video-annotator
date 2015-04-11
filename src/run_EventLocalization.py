@@ -111,14 +111,14 @@ def write_video(vidreader,out_path,num_prev_frames,num_blocks,smoothMasks):
 	time_taken = time.time()-start;	
 	#print "Writing video .... [DONE] in ",time_taken," seconds"
 
-def open_write_header(extract_path,shape,window):
+def open_write_header(extract_path):
 	create_folder_structure_if_not_exists(extract_path);
 	_file = open(extract_path,'w');
 	return _file;
 	
 def extract_feats(vidreader,extract_path,num_prev_frames,num_blocks,smoothMasks,window=5,overlap=2):
 	assert(window>overlap),"Window size needs to be greater than overlap window"
-	_file = open_write_header(extract_path,smoothMasks[0].shape,window);
+	_file = open_write_header(extract_path);
 	start = time.time(); 
 	frame_idx = num_prev_frames + num_blocks/2	
 	numFrames= len(smoothMasks);
@@ -134,6 +134,7 @@ def extract_feats(vidreader,extract_path,num_prev_frames,num_blocks,smoothMasks,
 			w_frames.tofile(_file,' ','%0.3f');
 			_file.write(os.linesep)
 		frame_idx += window-overlap;
+	_file.close();
 	time_taken = time.time()-start;	
 	#print "Extracting Feats .... [DONE] in ",time_taken," seconds"
 

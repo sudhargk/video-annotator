@@ -1,5 +1,6 @@
-from  smoothing import Smoothing
 import numpy as np
+
+from  smoothing import Smoothing
 from utils import normalize
 
 class EigenBased(Smoothing):	
@@ -62,6 +63,7 @@ class EigenBased(Smoothing):
 			smoothFrames = [idx for idx in smoothFrames if idx < numBlocks];
 		newMasks = [self.__computeNewMask__(blockFeats[frameIdx*frameSize:(frameIdx+1)*frameSize],shape,model) 
 							for frameIdx in smoothFrames]
+		newMasks= self.__post_process__(fgMasks,newMasks);
 		return newMasks
 		
 		

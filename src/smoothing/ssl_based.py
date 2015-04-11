@@ -1,7 +1,7 @@
-import time,cv2
-from  smoothing import Smoothing
-import numpy as np
+import time,cv2,numpy as np
 from sklearn.semi_supervised import label_propagation
+
+from  smoothing import Smoothing
 
 class SSLBased(Smoothing):
 	def __init__(self,_feats, max_iter = 10):
@@ -38,5 +38,5 @@ class SSLBased(Smoothing):
 		newMasks = [self.__get_score__(ssl_model,
 							blockFeats[frameIdx*frameSize:(frameIdx+1)*frameSize],shape) 
 							for frameIdx in smoothFrames]
-		#newMasks = self.eigenSmoothing(newMasks)
+		newMasks= self.__post_process__(fgMasks,newMasks);
 		return newMasks

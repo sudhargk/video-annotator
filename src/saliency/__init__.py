@@ -1,19 +1,13 @@
-import cv2,time,os
-import numpy as np
+import cv2,time,os,numpy as np
 from skimage.measure import regionprops
 from skimage import  segmentation, color
 from skimage.feature import greycomatrix, greycoprops
-from sklearn.feature_extraction import image
-from skimage.morphology import watershed
-from skimage.feature import peak_local_max
-from skimage.measure import label
 from scipy.spatial.distance import pdist,squareform
-from features.color import LAB,GRAY
-from utils import mkdirs
-from scipy import ndimage
-from utils import normalize
 from skimage.morphology import remove_small_objects
 from scipy.ndimage.morphology import binary_fill_holes
+
+from features.color import LAB,GRAY
+from utils import mkdirs,normalize
 
 KERNEL = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3));
 

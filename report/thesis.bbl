@@ -1,4 +1,4 @@
-\begin{thebibliography}{6}
+\begin{thebibliography}{7}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \expandafter\ifx\csname url\endcsname\relax
   \def\url#1{{\tt #1}}\fi
@@ -42,5 +42,10 @@
 \newblock {\em In\/} {\em Systems, Man and Cybernetics, 2004 IEEE International
   Conference on\/}, volume~4. 2004.
 \newblock ISSN 1062-922X.
+
+\bibitem[{Rother {\em et~al.\/}(2004)Rother, Kolmogorov, and Blake}]{grabcut}
+{\bf Rother, C.}, {\bf V.~Kolmogorov}, and {\bf A.~Blake} (2004).
+\newblock Grabcut: Interactive foreground extraction using iterated graph cuts.
+\newblock {\em ACM Transactions on Graphics (TOG)\/}, {\bf 23}(3), 309--314.
 
 \end{thebibliography}

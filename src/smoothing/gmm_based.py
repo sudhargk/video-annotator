@@ -1,9 +1,10 @@
-import time
-from  smoothing import Smoothing
-import numpy as np,cv2
-from utils import normalize
+import time,numpy as np,cv2
 from sklearn.mixture import GMM as GMM
 from sklearn.cluster import KMeans
+
+from  smoothing import Smoothing
+from utils import normalize
+
 
 RANDOM = 12
 
@@ -90,4 +91,5 @@ class GMMBased(Smoothing):
 						for frameIdx in smoothFrames]
 		
 		#newMasks = self.eigenSmoothing(newMasks)
+		newMasks= self.__post_process__(fgMasks,newMasks);
 		return newMasks
