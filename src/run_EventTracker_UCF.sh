@@ -18,7 +18,7 @@ SHAPE_H=60
 WINDOW=5
 WRITE_GRAY=false
 WRITE_BGSUB=false
-'
+
 echo "Configuration INPUT_PATH: $DATA_PATH, OUT_PATH: $OUT_PATH"
 echo "SHAPE: ($SHAPE_W,$SHAPE_H), WINDOW: $WINDOW, WRITE_GRAY: $WRITE_GRAY, WRITE_BGSUB: $WRITE_BGSUB"
 echo "Starting Event Localization"
@@ -39,7 +39,7 @@ for CLASS_PATH in $DATA_PATH/*; do
 done	
 wait
 echo "Event Localization [Done]"
-'
+
 if $WRITE_GRAY; then
 	NUM_CHANNELS=1;
 else
