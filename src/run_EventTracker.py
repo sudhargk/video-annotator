@@ -124,13 +124,14 @@ def perform_tracking(vidreader,smoothMasks,num_blocks,num_prev_frames,num_object
 	
 def crop_frame(frame,window_center,window_size,ac_shape,rsz_shape):
 	zero_frame = np.zeros((rsz_shape[1],rsz_shape[0],3));
-	left = window_center - window_size/2;
+	left = np.array(window_center - window_size/2,dtype=np.int8);
 	left[0] = min(left[0],ac_shape[0]-window_size[0]); left[0] = max(left[0],0)
 	left[1] = min(left[1],ac_shape[1]-window_size[1]); left[1] = max(left[1],0)
 	_frame = np.uint8(frame[left[1]:left[1]+window_size[1],left[0]:left[0]+window_size[0]])
 	_ratio = rsz_shape[0]/float(window_size[0]);
 	_frame = cv2.resize(_frame,None,fx=_ratio, fy=_ratio);
-	_shape = _frame.shape; x_l = max(rsz_shape[0]/2 - _shape[1]/2,0); y_l = max(rsz_shape[1]/2 - _shape[0]/2,0);
+	_shape = _frame.shape; 
+	x_l = max(rsz_shape[0]/2 - _shape[1]/2,0);  y_l = max(rsz_shape[1]/2 - _shape[0]/2,0);
 	if _frame.shape[0] > rsz_shape[1]:
 		zero_frame[y_l:y_l+_shape[0],x_l:x_l+_shape[1]]=_frame[:rsz_shape[1],:];
 	else:
