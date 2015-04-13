@@ -248,8 +248,8 @@ if __name__ == "__main__":
 	parser.add_argument("--num_prev_frames",nargs='?',help = "num prev frames default-3",default=2,type=int);
 	parser.add_argument("--num_blocks",nargs='?',help = "num blocks default-6",default=6,type=int);
 	parser.add_argument("--rsz_shape",nargs='+',help = "overlap default-[80 60]",default=[80,60],type=int);
-	parser.add_argument("--write_gray",nargs='?',help = "Write gray value  default-False",default=False,type=bool);
-	parser.add_argument("--write_bgsub",nargs='?',help = "Write bgsub default-False",default=False,type=bool);
+	parser.add_argument("--write_gray",nargs ='?',help = "Write gray value  default-0",default=0,type=int);
+	parser.add_argument("--write_bgsub",nargs='?',help = "Write bgsub default-0",default=0,type=int);
 	parser.add_argument("--window",nargs='?',help = "window size default-5",default=5,type=int);
 	parser.add_argument("--overlap",nargs='?',help = "overlap default-2",default=2,type=int);
 	
@@ -261,5 +261,5 @@ if __name__ == "__main__":
 	smoothner = smooth_instance(feats,args.smoothner);
 	start = time.time();
 	process(vidreader,sal,bg,smoothner,args.num_prev_frames,args.num_blocks,args.write,args.extract,
-				args.write_gray,args.write_bgsub,args.window,args.overlap,args.rsz_shape);
+				args.write_gray==1,args.write_bgsub==1,args.window,args.overlap,args.rsz_shape);
 	print "Event Tracker ...",inp,"[DONE] in",(time.time()-start),"seconds";

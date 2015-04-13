@@ -16,8 +16,8 @@ MAX_JOBS=4
 SHAPE_W=80 
 SHAPE_H=60
 WINDOW=5
-WRITE_GRAY=false
-WRITE_BGSUB=false
+WRITE_GRAY=0
+WRITE_BGSUB=0
 
 echo "Configuration INPUT_PATH: $DATA_PATH, OUT_PATH: $OUT_PATH"
 echo "SHAPE: ($SHAPE_W,$SHAPE_H), WINDOW: $WINDOW, WRITE_GRAY: $WRITE_GRAY, WRITE_BGSUB: $WRITE_BGSUB"
@@ -40,13 +40,13 @@ done
 wait
 echo "Event Localization [Done]"
 
-if $WRITE_GRAY; then
+if [ -nz $WRITE_GRAY ]; then
 	NUM_CHANNELS=1;
 else
 	NUM_CHANNELS=3;
 fi
 
-if $WRITE_BGSUB; then
+if [ -nz $WRITE_BGSUB ]; then
 	NUM_CHANNELS=`echo "$NUM_CHANNELS+1"|bc`;
 fi
 
