@@ -10,10 +10,12 @@
 \usepackage{epsfig}	
 \usepackage{caption}
 \usepackage{subfig}
+%\usepackage[dvips]{graphicx}
 \usepackage[dvips]{graphicx}
 % \usepackage[square,numbers,sort]{natbib}
 \usepackage[square]{natbib}
-\usepackage[hypertex]{hyperref} % hyperlinks for references.
+\usepackage{hyperref}
+%\usepackage[hypertex]{hyperref} % hyperlinks for references.
 %\usepackage{algorithmic}
 %\usepackage{algorithm}
 
@@ -51,71 +53,27 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Certificate
-\certificate
-\vspace*{0.5in}
-
-\noindent This is to certify that the thesis entitled {\bf {\thesistitle}}, 
-submitted by {\bf {\thesisauthor}}, to the Indian Institute of Technology, 
-Madras, for the award of the degree of {\bf Master of Technology}, 
-is a bonafide record of the research work carried out by him under my
-supervision. The contents of this thesis, in full or in parts, have not been
-submitted to any other Institute or University for the award of any degree or diploma.
-\vspace*{1.4in}
-\hspace*{-0.25in}
-\begin{singlespace}
-\noindent {\bf Prof.~Hema~A~Murthy} \\
-\noindent Research Guide \\ 
-\noindent Professor \\
-\noindent Dept. of Computer Science and Engineering\\
-\noindent IIT-Madras, 600 036 \\
-\end{singlespace}
-\vspace*{0.20in}
-\noindent Place: Chennai\\ 
-Date:
-
+\include{parts/certificate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Acknowledgements
-\acknowledgements
-I would like to thank my co-partner Abil N George for his
-support and contribution in the toolkit development. Also like to thank all colleagues in DONLAb(IIT Madras) who helped me throughout my research.  Lastly, thanks to my parents for all the moral support and the amazing chances they've given me over the years.
-
+\include{parts/acknowledgement}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Abstract
-
-\abstract
-
-\noindent KEYWORDS: \hspace*{0.5em} \parbox[t]{4.4in}{Convolutional Neural Network, Spatio Temporal Volumne, Saliency Estimation,}
-
-\vspace*{24pt}
-In this thesis we focus on detecting and identifying the multiple events occurring at a given instance. Discussion about the approaches followed to localize the multiple events occuring at given instance based on the saliency and motion based information.
-Spatio temporal volumes are extracted from a video segments where each volume corresponding to a specific event would be trained through 3D convolutional neural network model (3D-CNN) for sake of classification.
-\pagebreak
-
+\include{parts/abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Table of contents etc.
-
 \begin{singlespace}
 \tableofcontents
 \thispagestyle{empty}
-
 \listoftables
 \addcontentsline{toc}{chapter}{LIST OF TABLES}
 \listoffigures
 \addcontentsline{toc}{chapter}{LIST OF FIGURES}
 \end{singlespace}
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Abbreviations
-\abbreviations
-\noindent 
-\begin{tabbing}
-xxxxxxxxxxx \= xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \kill
-\textbf{CNN}   \> Convolutional Neural Network \\
-\textbf{STV} \> Spatio Temporal Volume \\
-\end{tabbing}
+\include{parts/abbreviation}
 
-\pagebreak
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Notation
@@ -142,84 +100,12 @@ xxxxxxxxxxx \= xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \kill
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Introduction.
-
- \chapter{INTRODUCTION}
- \label{chap:intro}
- In the era of Google glass, people want everything in front of them to be explicable. In domains like surveillance, detecting multiple events at same instance is helpful, for instance system must be capable to capture the fire accident and the person responsible for it simultaneously and then alert accordingly. Similarly, annotating events also helps in an effective video retrieval system to associate high level information in video along with the textual description.
-\par In our problem definition, we are given Internet  videos labeled with an event class, where the label specifies the events that occurs within video. In most of the dataset these are weakly labeled settings, i.e we do not have spatio-temporal segmentation, indicating coordinates and time points where at  which event occurs.  The detection aspect of our problem manifests task of localizing the event within the video further building the spatio-temporal volume for better event prediction.
-\par In section II, we we will discuss about the existing techniques used for event detection. We would also cover about our implementation of convolutional neural network in section III. In section IV, we will describe the steps for extracting spatio-temporal volume.
-
- \chapter{CONVOLUTIONAL NEURAL NETWORK}
- In this section we will discuss about the reasons for chosing the convolutional neural network and discuss the features supported by the indigenous neural network that was designed.
- \section{Why CNN~?}
- Covolutional neural networks (CNN) are variant of multiple layer perceptron that are designed by studying the complex arrangement of cells in the cats visual cortex. It fits very well onto the visual recognition domain where we expect the model to handle very high dimensional data, exploit the topology of image or video and be invariant to small translation and illumination changes. CNN leverage following concepts,
-\subsubsection{Local Connectivity}
-It exploits the spatially local correlation by enforcing local connectivity pattern between neurons of adjacent layers. In other words, every hidden units is only sensitive to a small block in  the visual field, called receptive field. This drastically reduces the number of connections between input and hidden layer, following which diminishes the number of parameters needed to train the model.
-\subsubsection{Shared Filters}
-The hidden units are associated to the receptive field by filters which are shared within a feature map. These filters tries to capture edge like patterns within the receptive field. Additionally, sharing filters increases learning efficiency by greatly reducing the number of free parameters to be learned. Apart from reducing parameters, they extract the same feature at every position, which makes every feature map to be equi-variant to any changes in the input. The shared filters are associated to the receptive field by a dot product operation which can be expressed as a discrete convolution operation.
-\subsubsection{Pooling/Sub-sampling Hidden Units}
-According to this concept, we try to pool the hidden in non-overlapping neighborhood. Among the techniques average and max pooling, max pooling has been commonly used as it provides local translation in-variance. Pooling also reduces inputs to next layer of feature extraction, thus allowing us to have many more feature maps. All feature maps in latter layer extracts coarser features.\par
-All these concepts enable CNN to achieve better generalization in the vision problems. We stack multiple such layers to achieve better responsiveness to larger visual field. \section{Python-DNN Toolkit}
-All these concepts enable CNN to achieve better generalization in the vision problems. We stack multiple such layers to achieve better responsiveness to larger visual field.
-\subsection{Implementation}
-Implementation of CNN is done in python using numerical computation library named \textit{Theano}. It provides platform to run efficiently in CPU and GPU architecture. Following are some key features of our implementation
-\begin{itemize}
-	\item  Allows easy configuration of the model, configurations are organized in JSON format thus makes the configuration legible to humans.
-	\item Supports several types of data readers/writers.
-	\item Enables us to dump CNN features for their use in other applications.
-	\item Facilitates in loading pre-trained model and dumping the trained model.
-	\item Supports two and three dimensional convolutional models.
-	\item Run efficiently in CPU and GPU architectures.
-	
-\end{itemize}
-Our implementation is publicly made available in github\footnote{\url{https://github.com/IITM-DONLAB/python-dnn}}. Architecture of the indigenous DNN toolkit is shown on \ref{fig:architecture}.Sample configurations for some well known dataset like MNIST and CIFAR are also made available with it.
-\begin{figure}[htpb]
-   \begin{center}
-     \resizebox{140mm}{!} {\includegraphics *{snaps/architecture.eps}}
-     \caption {Architecture of Python-DNN}
-   \label{fig:architecture}
-   \end{center}
- \end{figure}
-\chapter{BACKGROUND SUBTRACTION TECHNIQUES} 
-In order to identify multiple events occurring simultaneously, we extract temporal volumes by  bounding the visual field corresponding to the event. Extracted temporal volumes are fed to a three dimensional CNN to identify the corresponding event. 
-\par Event localization can be performed by determining the position with pixel changes and understanding the motion relativity as discussed in ~\cite{Basharat08}, where all components corresponding to an event show a similar flow of pixels. Following approach works significantly well in surveillance data but fails terribly in case human event detection. Later realized that, if we eliminate the background(static parts) of the visual frame, remaining would correspond to possible event locations. After background subtraction, we segment the visual frame and build temporal volumes corresponding to different events.
-Several background subtraction technique are eminent in the \cite{Piccardi04}, among these some apply on static image while others on dynamic video. In case of our application we can blend both these approaches to generate more reliable event detectors.
-\section{Frame Differencing}
-A very common approach for performing the moving object segmentation is using frame differencing but these approach is very sensitive to small changes and yields lots of noise when a camera is in motion. A simplest way to implement this technique is by computing the absolute difference of gray scale/intesity values two consecutive frames. Consider $P(p_x,p_y,t)$, intesity of pixel $(p_x,p_y)$ at frame t, then pixel $(p_x,p_y)$ that is considered foreground when absolute difference is above a threshold,$$\vert P(p_x,p_y,t+1) - P(p_x,p_y,t)t\vert > T$$.
-\par The robustness of this method depends on speed of forground elements. Faster movements may require higher thresholds to reduce the noise.  An alternate approach is to replace difference of a single previous frame  by an average of multiple previous frames, still results are noisy and not reliable.
-\section{Eigen subtraction}
-An alternate approach named eigen background subtraction was seen to be more elegant. A sample of N images of the videos are obtained, mean background image $\nu_b$ is computed and all mean normalized images $X$. Then we perform principal component analysis on the mean normalized images, idea is, that a high-dimensional images are often described by correlated variables and only a few meaningful dimensions account for most of the information. But performing PCA is not straightforward, consider 100 images of dimension 100x100 pixels, then the dimension of generated covariance matrix would be 10000x10000, i.e roughly 0.8 GB (considering 64 bit float values). Solving this is not feasible, hence we apply a trick from linear algebra that for a MXN matrix with $M>N$, we can at most have N-1 non-zero eigen values ~\cite{Duda01}. So we perform eigen decomposition of $X^TX$:
-$$X^TX\nu_i=\lambda_i\nu_i$$
-$$XX^T(X\nu_i)=\lambda_i(X\nu_i)$$
-Hence the orthonormal eigen vector of $XX^T$ is found out by normalizing $X\nu_i$ to unit length. Once eigen vectors of $XX^T$  are computed, we project the current frame $F$ on the eigen vector with top eigen values, and the reconstructed frame $F'$ is obtained by using the projection coefficients and the eigen vectors. The difference $F-F'$ would correspond to the mask on the moving object. 
-\section{Mixture of Gaussian}
-This is one of the well known method of extracting foreground information. \cite{kaew} model each background pixel by a mixture of N Gaussian distributions. The weights of the mixture represent the time proportions that those colors stay in the scene. The probable background colors are the ones which stay longer and more static. At any instance $i$ a particular pixel $(p_x,p_y)$ has color space represented as $V(p_{x},p_{y},i)$, history of the pixels are given by 
-$$X_{1},..,X_{t} = {V(p_{x},p_{y},i)~:~1\le i \le t }$$
-The history is modeled by mixture of N gaussian mixtures,
-$$P(X_{t})=\Sigma_{i}^{N}w_{(i,t)}\eta(X_{t},\mu_{(i,t)},\Sigma_{(i,t)})$$
-\par $w_{(i,t)}$,$\mu_{(i,t)}$,$\Sigma_{(i,t)}$ are weight,mean and covariance of the $i^{th}$ Gaussian in the mixture at time $t$ respectively and where $\eta$ is gaussian density function. General principle behind this approach is that when a new object occludes the background object, it will not match one of the existing distributions. Instead willl result in either the creation of a new dis-tribution or the increase in the variance of an existing distribution. The variance of the moving object is expected to remain larger than a background pixel until the moving object stops.
-
-\par Results of foreground mask obtained using moving average and eigen subtraction methods are shown in Figure \ref{fig:bgsub}.
-\chapter{Saliecny Detection}
-Visual saliency is the distinct subjective perceptual quality which makes some items in the world stand out from their neighbors and immediately grab our attention.
-As we had discussed earlier about the different techniques to extract the eminent pixels which are in motion, sometimes pixels which are stationary and quite distinct might also play a important role in the the activity recognition. These approaches are considered during the process attention modelling. Most of saliency estimations techniques in literature have got a common process,
-\begin{enumerate}
-	\item{\textbf{Color equalization:} It is done by removing the tail in the color histogram. This helps to improve the contrast in an image. In our implmentation color equalization is done on each channel separetely so that all channels can be provided to the clustering algorithm.}
-	\item{\textbf{SLIC-based segmentation:}  It is a simple linear iterative clustering that clusters pixels in the combined five-dimensional color and image plane space to efficiently generate compact, nearly uniform superpixels. Any slic based clustering algorithm takes two parameters number of super-pixels and compactness of each superpixel. According to \cite{slic}, slic is fastest and most memory efficient compared to  other segmentation technique like graph-cut, quick shift segmentation technques. Segmentation reduces the number of computation in the subsequent stages}
-	\item{\textbf{Extract segment properties:} Extracting features of the region that are used in computing the saliecny of each regions. Some features that are considered in our implementation are color based features (LAB,RGB) and texture based features (GLCM,Texture Flow).}
-	\item{\textbf{Compute~saliency:} Saliecny estimation techniques can be broadly categprozed into bottom-up, top-down and information maximization based on algorithmic computation. Earliest saliency based attention modelling was proposed by \cite{itti}. It was inspired by the behavior and the neuronal architecture of the early primate visual system.}
-	\item{\textbf{Saliency cut:} Saliency maps are generally thresholded to obtain the salient mask. In the implementation, grab-cut\citep{grabcut} performs segmentation by modeling foreground and background based on saliency estimation to obtain the mask. We considered higher saliency  correspond to foreground while lower saliency correspond to background. After getting the saliency mask we apply few morphological operation to remove the salt and pepper noise}
-\end{enumerate} 
-\par Some of the distiguished saliency estimation techniques are discussed below. 
-\section{Hierarchical Color Based}
-It is a top-down approach for computing saliency. In this approach we hierarchically set saliency map of improbable salient pixels to zero. The hierarchy is based on the neighborhood window size. 
-
-\section{Contxt Aware Based}
-\section{Spectral Distribution Based}
-\section{Regional Contrast}
-
-
-
+\include{parts/introduction}
+ 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ % Chapters.
+\include{parts/chapters/eventRecognition}
+\include{parts/chapters/eventLocalization} 
 
 
 \chapter{SAMPLE} 

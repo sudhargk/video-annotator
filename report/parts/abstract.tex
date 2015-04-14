@@ -1,0 +1,13 @@
+\abstract
+
+\noindent KEYWORDS: \hspace*{0.5em} \parbox[t]{4.4in}{Convolutional Neural Network; Spatio Temporal Volumne; Background Subtraction; Saliency Estimation; Temporal Smoothening}
+
+\vspace*{24pt}
+Real time event recognition has been one of fundamental research arena in the vision domain. It aims to recognize the actions and goals of multiple subjects from a given sequence of frames. The major challenges with real time event recognition are geometric and photometric variances, clutter background and complex camera motion. This problem was targetted  by dimidiating it into event localization and event recognition task. While event recognition is aimed at labelling the localized event regions, the event localization focusses on isolation of all possible event regions in given train of frames.
+
+\par Initial part of the thesis work is focussed on the indigenous deep neural network toolkit that was built using external theano libraries. Eventhough the toolkit encompasses of different deep neural network techniques, for the sake of event recognition task, only convolutional neural network (CNN) was exploited. Investigation on providing  processed features along with the raw images as a input to CNN were contemplated for the improvement in the prediction.
+
+\par The later part of the work begins with the background subtraction problem for segregation of events, where the foreground regions that appear to be altering are picked to be part of an event. Enhancement of this approach of event localization by adding salient region estimation is considered that aides in detecting complete objects which are in motion. Follow it up with temporal smoothening with the motivation to even out the mask estimates across continuous train of frames. Window tracking is supplemented over all these to extract the spatio temporal volume (STV) of a event.
+ 
+\par Extracted STV from the video segments are supplied to a  CNN to identify the corresponding event label.
+\pagebreak
