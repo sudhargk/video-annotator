@@ -10,7 +10,13 @@
 *.ps
 *.dvi
 *.aux
- 
+*.bbl
+*.blg
+*lof
+*.lot
+*.pdf
+*.toc
+
 # Packages #
 ############
 # it's better to unpack these files and commit the raw source

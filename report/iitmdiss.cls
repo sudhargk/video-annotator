@@ -204,6 +204,7 @@ footskip=30pt,bottom=1in]{geometry}
   \vspace*{0.75in}
   %\centerline{\psfig{figure=emblem.ps}}
   \centerline{\includegraphics[scale=0.3]{iitm.eps}}
+  %\centerline{\includegraphics[scale=0.3]{iitm.pdf}}
   \vspace*{-0.15in}
   \begin{center}
     {\bf \large DEPARTMENT OF \MakeUppercase{\@department}\par}
