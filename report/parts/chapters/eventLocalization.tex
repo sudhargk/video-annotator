@@ -12,8 +12,8 @@ A very common approach for performing the moving object segmentation is using fr
 This is one of the well known method of extracting foreground information. \cite{kaew} model each background pixel by a mixture of N Gaussian distributions. The weights of the mixture represent the time proportions that those colors stay in the scene. The probable background colors are the ones which stay longer and more static. At any instance $i$ a particular pixel $(p_x,p_y)$ has color space represented as $V(p_{x},p_{y},i)$, history of the pixels are given by 
 $$X_{1},..,X_{t} = {V(p_{x},p_{y},i)~:~1\le i \le t }$$
 The history is modeled by mixture of N gaussian mixtures,
-$$P(X_{t})=\Sigma_{i}^{N}w_{(i,t)}\eta(X_{t},\mu_{(i,t)},\Sigma_{(i,t)})$$
-\par $w_{(i,t)}$,$\mu_{(i,t)}$,$\Sigma_{(i,t)}$ are weight,mean and covariance of the $i^{th}$ Gaussian in the mixture at time $t$ respectively and where $\eta$ is gaussian density function. General principle behind this approach is that when a new object occludes the background object, it will not match one of the existing distributions. Instead will result in either the creation of a new distribution or the increase in the variance of an existing distribution. The variance of the moving object is expected to remain larger than a background pixel until the moving object stops.
+$$P(X_{t})=\Sigma_{i}^{N}w_{i,t}\eta(X_{t}|\mu_{i,t},\Sigma_{i,t})$$
+\par $w_{i,t}$, $\mu_{i,t}$, $\Sigma_{i,t}$ are weight,mean and covariance of the $i^{th}$ Gaussian in the mixture at time $t$ respectively and where $\eta$ is gaussian density function. General principle behind this approach is that when a new object occludes the background object, it will not match one of the existing distributions. Instead will result in either the creation of a new distribution or the increase in the variance of an existing distribution. The variance of the moving object is expected to remain larger than a background pixel until the moving object stops.
 
 
 \subsection{Eigen subtraction (ES)}
@@ -53,13 +53,47 @@ As we had discussed earlier about the different techniques to extract the eminen
    \end{center}
  \end{figure}
 
-\par Some of the saliency estimation techniques that were studied in the thesis are,
-\subsection{Hierarchical Color Based}
-It is a top-down approach for computing saliency. In this approach we hierarchically set saliency map of improbable salient pixels to zero at every iteration.
+\par Some of the saliency estimation techniques that were studied in the thesis are described below. All these techniques can be considered at pixel level or region level, based on whether the segmentation of the image is considered or not.
 
-\subsection{Contxt Aware Based}
-\subsection{Spectral Distribution Based}
-\subsection{Regional Contrast}
+\subsection{Hierarchical Color Based (HCB)}
+HCB is a top-down approach for computing saliency where saliency map of improbable pixels/regions are set to zero at every iteration. Saliency of pixel/region $I_{x}$ is computed by folowing formulation. 
+$$ Iavg_{x} = \Sigma_{y} I_{y}~\exp^{-\frac{\parallel~p_{x} - p_{y}~\parallel}{w}}  $$
+$$ saliency(I_{x}) =~\parallel I_{x} - Iavg_{x} \parallel $$
+where $p_{x}$ is the position of the pixel $I_{x}$. At each iteration, the $w$ is decreased implying closer neigborhood. After each iteration we eliminate pixels/regions with $ saliency(I_{x})$ lesser than $0.1$ after normalization. In this manner, we  discard the background pixels/regions leaving out only the foreground pixels/regions. The main focus of this technique is to measure the variation from the average pixel intensity.
 
+\subsection{Context Aware Based (CAB)}
+In CAB, saliency estimate are averaged out at a different context windows. The expressions for the estimation of saliency is given below,
+$$ AllPairDistance(I_{x},I_{y},k) = \exp^{-\frac{\parallel~p_x - p_y~\parallel}{dw_k}}~\exp^{-\frac{\parallel~I_{x} - I_{y}~\parallel}{cw}}$$
+$$ NormDistance(I_{y},k) = \Sigma_{x} AllPairDistance(I_{x},I_{y},k)$$
+$$ saliency(I_{x}) = 1- \Sigma^{K}_{k=1}~dw_{k}~\Sigma_{y}~\frac{AllPairDistance(I_{x},I_{y},k)}{NormDistance(I_{y},k)}$$
+where $cw$ and $K$ are color weight and number of context windows respectively. Saliency measures the similarity with its neighborhood weighted on proximity of the pixels/regions. $AllPairDistance(I_{x},I_{y},k)$ is disparity measure across pairs of pixels/regions $(I_{x},I_{y})$ for different values of $dw_{k}$ while $NormDistance(I_{y},k)$ correspond to the normalizing factor.
+This technique perform fairly well in discriminating saliency objects which are not in same scale.
+
+\subsection{Spectral Distribution Based (SDB)} 
+SDB is based on the intuition that pixels with small color distribution variances have high saliency values. The extent color distribution is measured by color spatial variance. \cite{spectralSal} proposed a technique to compute color spatial variances using Gaussian Mixture Models (GMMs). All pixels/regions in the image are represented by GMMs using Expectation Maximization (EM) algorithm, where $w_{c}$, $\mu_{c}$ $\Sigma_{c}$ is the weight, the mean color, and the covariance matrix of the $c^{th}$ mixture. Each pixel/region is assigned to a mixture with the probability:
+$$p(c | I_{x}) = \frac{w_{c}\eta(I_{x}| \mu_{c},\Sigma_{c})}{\Sigma_{c}w_{c}\eta(I_{x}| \mu_{c},\Sigma_{c}} $$
+Suppose $x_{h}$ is the x coordinate (horizontal coordinate) of the pixel x. The spatial variance for x-dimension of color component c is computed as:
+$$\sigma_{h}^{2}(c) = \frac{1}{|P|_{c}}\Sigma_{x}	p(c | I_{x}) \parallel x_{h} -M_{h}(c) \parallel^{2}$$
+where $M_{h}(c) = \frac{1}{|P|_{c}}\Sigma_{x}p(c|I_{x})~x_h$ , and $|P|_{c} = \Sigma_{x}p(c | I_{x})$ is a normalization factor. The vertical variance $\sigma_{v}^{2}(c)$ is defined similarly. The spatial variance of a component c is combined as: $\sigma^{2}(c) = \sigma_{h}^{2}(c) + \sigma_{c}^{2}(c)$ which is then normalized.
+The saliency $saliency(I_{x})$ of a specific pixel $I_{x}$ regarding to color spatial
+distribution is defined as the weighted sum:
+$$saliency(I_{x}) = \Sigma_{x}p(c | I_{x})(1-\sigma^{2}(x))$$
+This method yields very good results for many examples but the configurations requires tweaks for better results.
+
+\subsection{Regional Contrast (RC)}
+RC evaluates saliency of an image region using its contrast with respect to the entire image. Several approaches  \citep{globContrast}, {patchRarities}, \citep{salFilters} for computing saliency based on global contrast are known in literature while in this work, these techniques are fused and presented as solitude.
+It considers two contrast measures:
+\subsubsection{Uniqueness}
+Element uniqueness is contemplated with  assumption that image regions, which stand out from other regions in certain aspects, catch our attention and hence to be labeled more salient. Element uniqueness for segment $I_{x}$, given its position $p_{I_{x}}$ compared to all other $I_{y}$ is defined as follows,
+$$uniqueness(I_{x}) = \Sigma_{y} \parallel~I_{x} -I_{y}~\parallel~\exp^{-\frac{\parallel~p_{x} - p_{y}~\parallel}{dw}}$$
+where $dw$ controls the proximity of the neigborhood, higher value correspond to wider neigborhood.
+\subsubsection{Distribution}
+In general, colors belonging to the background will be distributed over the entire image exhibiting a high spatial variance, whereas foreground objects are generally more compact. Element distribution measure for a segment $I_{x}$ using the spatial variance of its color as follows,
+$$distribution(I_{x}) = \Sigma_{y} \parallel~p_{y} -\mu_{x}~\parallel~\exp^{-\frac{\parallel~I_{x} - I_{y}~\parallel}{cw}}$$ 
+where $\mu_{x} = \Sigma_{y}~p_{y}~exp^{-\frac{\parallel~I_{x} - I_{y}~\parallel}{cw}}$, measures weighted mean position of the color of $I_{x}$ component. Low variance indicates a spatially compact object hence they are considered more salient than spatially widely distributed elements.
+
+\par The two above contrast measures defined at element level can be conolidated by given expression,
+$$saliency(I_{x}) = uniqueness(I_{x}) \exp^{-k~distribution(I_{x})}$$
+where $k$ controls the empasis on distribution while both the contrast measure are normalized. It is observed that the uniqueness performs well in case of single object saliency while for multiple object saliency, uniqueness together with distribution yields better result.
 
 
