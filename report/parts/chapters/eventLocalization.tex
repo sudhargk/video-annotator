@@ -1,4 +1,6 @@
 \chapter{EVENT LOCALIZATION}
+ \label{chap:eventLo}
+\section{Introduction}
 This section of thesis considers the problem of localization: the objective is to detect where an action of interest occurs. The expected output of such a system is typically a subvolume encompassing the action of interest. Since a localized action only covers a fraction of the spatio-temporal volume in a video, the task is considerably more challenging than event classification. Some of the common startergies that are tried on this kind of problems are efficient sub-window search ~\citep{subwindowsearch},"selective search" stratergy ~\citep{selectivesearch}  and a recent by ~\cite{tubelet}, but these either does a exhaustive search or does a iterative merging of the supervoxels. 
 
 \section{Background Subtraction Techniques} 
@@ -33,27 +35,28 @@ The orthonormal eigen vector of $XX^T$ is found out by normalizing $X\nu_i$ to u
 
 \section{Saliecny Detection}
 Visual saliency is the distinct subjective perceptual quality which makes some items in the world stand out from their neighbors and immediately grab our attention.
-As we had discussed earlier about the different techniques to extract the eminent pixels which are in motion, sometimes pixels which are stationary and quite distinct might also play a important role in the the activity recognition. These approaches are considered during the process attention modelling. Most of saliency estimations techniques in literature have the following five steps,
+As we had discussed earlier about the different techniques to extract the eminent pixels which are in motion, sometimes pixels which are stationary and quite distinct might also play a important role in the the activity recognition. These approaches are considered during the process attention modelling. Most of saliency estimations techniques follow the following five steps which can be visualized in Figure \ref{fig:salap},
+\begin{itemize}
+\item{\textbf{Step 1: Color equalization:} This is performed by removing the tail in the color histogram. It helps improving the contrast in the image. In the implmentation color equalization is done on each channel separetely so that all channels can be provided to the segmentation algorithm.}
 
-\subsubsection{Step 1: Color equalization:} This is performed by removing the tail in the color histogram. It helps improving the contrast in the image. In the implmentation color equalization is done on each channel separetely so that all channels can be provided to the segmentation algorithm.
+\item{ \textbf{Step 2: SLIC-based segmentation:}  It is a simple linear iterative clustering that clusters pixels in the combined five-dimensional color and image plane space to efficiently generate compact, nearly uniform superpixels. Any slic based clustering algorithm takes two parameters number of super-pixels and compactness of each superpixel. According to \cite{slic}, slic is fastest and most memory efficient compared to  other segmentation technique like graph-cut, quick shift segmentation technques. Segmentation reduces the number of computation in the subsequent stages.}
 
-\subsubsection{Step 2: SLIC-based segmentation:}  It is a simple linear iterative clustering that clusters pixels in the combined five-dimensional color and image plane space to efficiently generate compact, nearly uniform superpixels. Any slic based clustering algorithm takes two parameters number of super-pixels and compactness of each superpixel. According to \cite{slic}, slic is fastest and most memory efficient compared to  other segmentation technique like graph-cut, quick shift segmentation technques. Segmentation reduces the number of computation in the subsequent stages.
+\item{ \textbf{Step 3: Extract segment properties:} Extracting features of the region that are used in computing the saliecny of each regions. Some features that are considered in the implementation are color based features (LAB,RGB) and texture based features (GLCM,Texture Flow).}
 
-\subsubsection{Step 3: Extract segment properties:} Extracting features of the region that are used in computing the saliecny of each regions. Some features that are considered in the implementation are color based features (LAB,RGB) and texture based features (GLCM,Texture Flow).
+\item{\textbf{Step 4: Compute~saliency:} Saliecny estimation techniques can be broadly categorized into bottom-up, top-down and information maximization based on algorithmic computation. Earliest saliency based attention modelling was proposed by \cite{itti}. It was inspired by the behavior and the neuronal architecture of the early primate visual system.}
 
-\subsubsection{Step 4: Compute~saliency:} Saliecny estimation techniques can be broadly categorized into bottom-up, top-down and information maximization based on algorithmic computation. Earliest saliency based attention modelling was proposed by \cite{itti}. It was inspired by the behavior and the neuronal architecture of the early primate visual system.
-
-\subsubsection{Step 5: Saliency cut:} Saliency maps are generally thresholded to obtain the salient mask. In the implementation, grab-cut\citep{grabcut} performs segmentation by modeling foreground and background based on saliency estimation to obtain the mask where higher saliency  contemplate foreground while lower saliency estimate corespond to background. Once saliency mask are obtained few morphological operation are applied to remove the salt and pepper noise.
+\item{\textbf{Step 5: Saliency cut:} Saliency maps are generally thresholded to obtain the salient mask. In the implementation, grab-cut\citep{grabcut} performs segmentation by modeling foreground and background based on saliency estimation to obtain the mask where higher saliency  contemplate foreground while lower saliency estimate corespond to background. Once saliency mask are obtained few morphological operation are applied to remove the salt and pepper noise.}
+\end{itemize}
 
 \begin{figure}[htpb]
    \begin{center}
 	    \includegraphics[width=0.95\textwidth]{snaps/sal/saliency.eps}     
      \caption {A general approach for saliency estimation}
-   \label{fig:bgsub}
+   \label{fig:salap}
    \end{center}
  \end{figure}
 
-\par Some of the saliency estimation techniques that were studied in the thesis are described below. All these techniques can be considered at pixel level or region level, based on whether the segmentation of the image is considered or not.
+\par Some of the saliency estimation techniques that were studied in the thesis are discussed below. All these techniques can be considered at region level or pixel level, based on whether the segmentation of the image is considered or not.
 
 \subsection{Hierarchical Color Based (HCB)}
 HCB is a top-down approach for computing saliency where saliency map of improbable pixels/regions are set to zero at every iteration. Saliency of pixel/region $I_{x}$ is computed by folowing formulation. 
@@ -94,6 +97,25 @@ where $\mu_{x} = \Sigma_{y}~p_{y}~exp^{-\frac{\parallel~I_{x} - I_{y}~\parallel}
 
 \par The two above contrast measures defined at element level can be conolidated by given expression,
 $$saliency(I_{x}) = uniqueness(I_{x}) \exp^{-k~distribution(I_{x})}$$
-where $k$ controls the empasis on distribution while both the contrast measure are normalized. It is observed that the uniqueness performs well in case of single object saliency while for multiple object saliency, uniqueness together with distribution yields better result.
+where $k$ controls the empasis on distribution while both the contrast measure are normalized. It is observed that the uniqueness performs well in case of single object saliency while for multiple object saliency, uniqueness together with distribution yields better result. Saliency mask obtained using HCB, CAB, SDB and RC for some standard weizmann segmentation dataset images are shown in Figure \ref{fig:sal}. 
 
+\begin{figure}[htpb]
+   \begin{center}
+	    \includegraphics[width=0.75\textwidth]{snaps/sal/saliencyall.eps}     
+     \caption {Saliency mask obtained using multiple techniques}
+   \label{fig:sal}
+   \end{center}
+ \end{figure}
 
+ \section{Smoothening}
+Smoothening of the mask obtained at frame level is essential because of the occlussion and illumination variations. All the approaches were implemented by considering a context before and after the frame. A common approach which was followed for the smoothening of frame was by blending the background subtraction measure and the saliency measure to obtain a visual attention score. Higher visual attention score ($\geqslant0.8$) were considered \textsc{True Foreground} while lower visual attention score ($\leqslant0.2$)  were considered \textsc{True Background}. Then models are built for prediction of other regions/pixels. Three approaches for smoothening of visual attention measure are demonstrated below,
+\subsection{Eigen Based}
+Eigen Based method is based on projecting the pixels along the direction of maximum variance for foreground and background. Any pixel is assigned foreground if the projection along the direction of maximum variance for foreground is larger compared to  background. The direction of maximum variance are computed by gathering features (pixel level features like color, texture, gradient and position) of forground/background pixels in the context and perform the principal compoenent analysis (PCA). But this approach of smoothening, has been failing in most of the scenarios and did not yield good localization of event.
+\subsection{Semi-supervised}
+As all know semi-supervised learning is a situation where the training data some of the samples are not labeled. Hence the semi-supervised learning seems most appropriate for the smoothening task, as it would make use of the unlabeled data to capture the manifold of the underlying data distribution and generalize better for new examples. In this thesis, label proagation \citep{labprop}, a graph based semi supervised learning was materialized for polishing the mask. This technique was computationally intensive as we required to build model using all pixels in the frame in given context.There was no sort of adaptation mechanism which was available, for a faster convergence of learning algorithm.
+\subsection{Guassian Mixture Based}
+Gaussian mixture model was  most successful experiment among the techniques considered.  In this approach, two gaussian mixture model were built using true foreground and background  examples. Each and every pixels are assigned to either forground or background based on the likelihood scores of foreground and background model . One of the biggest advantage of this approach is its support to adapt, i.e models of previous frames can be finetuned for the current frames which helps training individual context models quickly.
+\par Among all the methods the gaussian mixture models are considered for all the experiments because of its swiftness and the robustness. Few post processing operation were carried over the predicted mask like median blurring,region filling were done to remove the salt and pepper noises and spurious regions that are puny. Figure \ref{fig:smoothen}  shows obtained smoothened mask using different techniques from the visual attention score.
+\section{Tracking}
+ 
+\section{Summary}

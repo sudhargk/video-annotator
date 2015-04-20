@@ -1,6 +1,8 @@
 \chapter{EVENT RECOGNITION}
+
+\section{Introduction}
  In this section we will discuss about the reasons for chosing the convolutional neural network and discuss the features supported by the indigenous neural network that was designed.
- \section{Why CNN~?}
+ \section{Convolutional Neural Network (CNN)}
  Covolutional neural networks (CNN) are variant of multiple layer perceptron that are designed by studying the complex arrangement of cells in the cats visual cortex. It fits very well onto the visual recognition domain where we expect the model to handle very high dimensional data, exploit the topology of image or video and be invariant to small translation and illumination changes. CNN leverage following concepts,
 \subsubsection{Local Connectivity}
 It exploits the spatially local correlation by enforcing local connectivity pattern between neurons of adjacent layers. In other words, every hidden units is only sensitive to a small block in  the visual field, called receptive field. This drastically reduces the number of connections between input and hidden layer, following which diminishes the number of parameters needed to train the model.
@@ -29,3 +31,4 @@ Our implementation is publicly made available in github\footnote{\url{https://gi
 	 \label{fig:architecture}
    \end{center}
  \end{figure}
+\section{Summary}
