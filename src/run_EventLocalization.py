@@ -45,9 +45,17 @@ def compute_fgbg_masks(vidreader,sal,bg,num_prev_frames=1,threaded=False,num_blo
 			prev_frames = frames[_idx-num_prev_frames:_idx]
 			bg_variation = bg.process(frames[_idx],prev_frames);
 			saliency = sal.process(frames[_idx]);	
-			_idx += 1;	saliency_prob =  normalize(6*bg_variation  + 4*saliency);
+			_idx += 1;	saliency_prob =  normalize(7*bg_variation  + 3*saliency);
 			_,fgmask = cv2.threshold(saliency_prob ,0.5,1,cv2.THRESH_BINARY)
 			_,bgmask = cv2.threshold(bg_variation,0.1,1,cv2.THRESH_BINARY_INV)
+			name = "test_results/smoothening/{0}_sal.png".format(frameIdx-num_blocks-num_prev_frames+_idx);
+			zero_frame= np.zeros(frames[0].shape,dtype = np.uint8);
+			zero_frame[:,:,2]=fgmask*255;
+			zero_frame[:,:,1]=bgmask*255;
+			_prob = cv2.cvtColor(saliency_prob*255,cv2.COLOR_GRAY2RGB);
+			out = cv2.addWeighted(np.uint8(_prob),0.6,zero_frame,0.4,0);
+			cv2.imwrite(name,out)
+		
 			fgMasks.extend([fgmask]); bgMasks.extend([bgmask])
 		return (frameIdx,fgMasks,bgMasks);
 	frameFgMasks = []; frameBgMasks = []; 
@@ -59,7 +67,7 @@ def compute_fgbg_masks(vidreader,sal,bg,num_prev_frames=1,threaded=False,num_blo
 			task = pending.popleft()
 			idx,fgmask,bgmask  = task.get()
 			frameFgMasks.extend(fgmask); frameBgMasks.extend(bgmask);
-			#print 'Computing Mask ... {0}%\r'.format((idx*100/N)),
+			print 'Computing Mask ... {0}%\r'.format((idx*100/N)),
 		if len(pending) < threadn and frameIdx-num_prev_frames-num_blocks < N:
 			(cnt,frames) = vidreader.read(frameIdx-num_prev_frames-num_blocks,num_prev_frames+num_blocks);
 			if cnt >= num_prev_frames:
@@ -72,14 +80,14 @@ def compute_fgbg_masks(vidreader,sal,bg,num_prev_frames=1,threaded=False,num_blo
 		if len(pending) == 0:
 			break;
 	time_taken = time.time()-start;	
-	#print "Computing Mask ... [DONE] in ",time_taken," seconds"
+	print "Computing Mask ... [DONE] in ",time_taken," seconds"
 	return (frameFgMasks,frameBgMasks)
 
 def perform_smoothing(vidreader,smoothner,fgMasks,bgMasks,num_blocks=4,skip_frames = 0):
 	start = time.time();	frameNewMasks = []; 
 	frame_idx = 2*num_blocks;  N = vidreader.frames;
 	while(frame_idx < N):
-		#print 'Smoothning Masks... {0}%\r'.format((frame_idx*100/N)),
+		print 'Smoothning Masks... {0}%\r'.format((frame_idx*100/N)),
 		(num_frames,frames) = vidreader.read(skip_frames + frame_idx-2*num_blocks,2*num_blocks);
 		if num_frames > num_blocks:
 			start_idx = num_blocks/2; end_idx = min(3*num_blocks/2,num_frames);
@@ -89,27 +97,31 @@ def perform_smoothing(vidreader,smoothner,fgMasks,bgMasks,num_blocks=4,skip_fram
 			frameNewMasks.extend(newMasks);
 		frame_idx += num_blocks
 	time_taken = time.time()-start;	
-	#print "Smoothning Masks ... [DONE] in ",time_taken," seconds"
+	print "Smoothning Masks ... [DONE] in ",time_taken," seconds"
 	return frameNewMasks;
 
 	
-def write_video(vidreader,out_path,num_prev_frames,num_blocks,smoothMasks):
+def write_video(vidreader,out_path,num_prev_frames,num_blocks,smoothMasks,vaMasks):
 	create_folder_structure_if_not_exists(out_path);
 	start = time.time(); 
-	vidwriter = VideoWriter(out_path,vidreader.width,vidreader.height)
+	vidwriter = VideoWriter(out_path,vidreader.width*2,vidreader.height)
 	vidwriter.build();	vidreader.__reset__();	N = vidreader.frames;
 	vidreader.skip_frames(num_prev_frames + num_blocks/2); frame_idx = 0	
 	numFrames= len(smoothMasks);
 	while(frame_idx < numFrames):
-		#print 'Writing video ... {0}%\r'.format((frame_idx*100/N)),
+		print 'Writing video ... {0}%\r'.format((frame_idx*100/N)),
 		frame = vidreader.read_next();
-		out_frame = GRAY(frame) * smoothMasks[frame_idx]
-		out_frame = cv2.cvtColor(out_frame,cv2.COLOR_GRAY2RGB);
-		vidwriter.write(np.uint8(out_frame))
+		zero_frame = np.zeros(frame.shape,dtype=np.uint8);
+		zero_frame[:,:,2] = vaMasks[frame_idx]*255
+		out_frame1 = cv2.addWeighted(frame,0.6,zero_frame,0.4,0);
+		out_frame2 = frame * smoothMasks[frame_idx][:,:,None]
+		name = "test_results/smoothening/{0}_smooth.png".format(frame_idx+num_prev_frames + num_blocks/2);
+		cv2.imwrite(name,out_frame2)
+		vidwriter.write(np.uint8(np.hstack((out_frame1,out_frame2))))
 		frame_idx += 1;
 	vidwriter.close();
 	time_taken = time.time()-start;	
-	#print "Writing video .... [DONE] in ",time_taken," seconds"
+	print "Writing video .... [DONE] in ",time_taken," seconds"
 
 def open_write_header(extract_path):
 	create_folder_structure_if_not_exists(extract_path);
@@ -138,12 +150,12 @@ def extract_feats(vidreader,extract_path,num_prev_frames,num_blocks,smoothMasks,
 	time_taken = time.time()-start;	
 	#print "Extracting Feats .... [DONE] in ",time_taken," seconds"
 
-def process(vidreader,sal,bg,smoothner,num_prev_frames=3 ,num_blocks=6, write_path=None,
+def process(vidreader,sal,bg,smoothner,num_prev_frames=2 ,num_blocks=10, write_path=None,
 				extract_path=None,window_size=5,overlap=2,threaded=False):
 	fgMasks,bgMasks = compute_fgbg_masks(vidreader,sal,bg,num_prev_frames,threaded);
 	smoothMasks = perform_smoothing(vidreader,smoothner,fgMasks,bgMasks,num_blocks,num_prev_frames);
 	if not write_path is None:
-		write_video(vidreader,write_path,num_prev_frames,num_blocks,smoothMasks);
+		write_video(vidreader,write_path,num_prev_frames,num_blocks,smoothMasks,fgMasks[num_blocks/2:]);
 	if not extract_path is None:
 		extract_feats(vidreader,extract_path,num_prev_frames,num_blocks,smoothMasks,window_size,overlap)
 	vidreader.close();
@@ -158,9 +170,9 @@ if __name__ == "__main__":
 	parser.add_argument("--sal",nargs='?',help = "saliency method 1-CF, 2-CA, 3-RC, 4-SD default-3",default=3,type=int);
 	parser.add_argument("--smoothner",nargs='?',help = "smoothing method 1-Eigen, 2-GMM, 3-SSL,  default-2",default=2,type=int);
 	parser.add_argument("--write",nargs='?',help = "write path  default-Dont write",default="test_results/final.avi",type=str);
-	parser.add_argument("--extract",nargs='?',help = "extract path default-Dont extract",default="test_results/final.feats",type=str);
+	parser.add_argument("--extract",nargs='?',help = "extract path default-Dont extract",default=None,type=str);
 	parser.add_argument("--num_prev_frames",nargs='?',help = "num prev frames default-3",default=3,type=int);
-	parser.add_argument("--num_blocks",nargs='?',help = "num blocks default-6",default=6,type=int);
+	parser.add_argument("--num_blocks",nargs='?',help = "num blocks default-6",default=8,type=int);
 	parser.add_argument("--window_size",nargs='?',help = "window size default-5",default=5,type=int);
 	parser.add_argument("--overlap",nargs='?',help = "overlap default-2",default=2,type=int);
 	args = parser.parse_args()

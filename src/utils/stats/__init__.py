@@ -8,6 +8,8 @@ NBSTATS = 5
 (TP, FP, FN, TN, NBSHADOWERROR) = range(NBSTATS)
 
 def comparator(gt_mask,ac_mask,roi_mask=None):
+	if (np.sum(gt_mask==1)==0):
+		return [0,0,0,0,0]
 	if roi_mask is None:
 		roi_mask = np.ones(gt_mask.shape,dtype=np.uint8);
 	tp = np.sum((gt_mask==1) & (ac_mask==1) & (roi_mask==1));

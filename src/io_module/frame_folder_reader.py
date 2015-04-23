@@ -26,6 +26,15 @@ class FrameFolderReader(object):
 			return frame
 		return None
 		
+	def read(self,startFrame=0,numFrames=1):
+		frames = [];	self.read_frames = startFrame - 1
+		while(numFrames>0):
+			frame = self.read_next();
+			if frame is None:# or self.read_frames > self.frames:
+				break;
+			frames.extend([frame]);	numFrames -=1;
+		return (len(frames),frames);
+		
 	def skip_frames (self,num_frames=0):
 		self.read_frames = min(self.read_frames+num_frames,self.frames)
 		return None

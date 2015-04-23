@@ -12,8 +12,8 @@ HSV_LOW = 0; HSV_MAX = 180; RANDOM=1
 class MixtureBased(Tracker):
 	def __init__(self):
 		self.numMixtures = 1;
-		self.n_bins = 180
-		self.n_iter = 2
+		self.n_bins = 360
+		self.n_iter = 5
 		self.hist_gmm = None
 		self.shape_kmeans = None
 		
@@ -69,7 +69,7 @@ class MixtureBased(Tracker):
 		if len(activeWindowFeats) > 0:
 			activeWindowFeats = np.vstack(activeWindowFeats);
 			self.__build_model__(activeWindowFeats[:,:self.n_bins],activeWindowFeats[:,self.n_bins:]);
-		term_crit = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 4, 1 );
+		term_crit = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 2, 1 );
 		frame_track_windows = []
 		for hsv_frame in hsv_frames:
 			track_windows=[];
@@ -77,7 +77,7 @@ class MixtureBased(Tracker):
 				back_proj = cv2.calcBackProject([hsv_frame],[0],self.hist_gmm.means_[idx,:],[0,self.n_bins],1);
 				window = np.array(self.shape_kmeans.cluster_centers_[idx,:],dtype =int)
 				window = tuple(window.clip(0))
-				if(window[2]> 10 and window[3]>10):
+				if(window[2]> 10 and window[3]> 10):
 					ret,window = cv2.meanShift(back_proj, window, term_crit)
 				window = (window[0],window[1],window[0]+window[2],window[1]+window[3]);
 				track_windows.extend([(window,idx)]);

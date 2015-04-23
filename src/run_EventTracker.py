@@ -59,7 +59,7 @@ def compute_fgbg_masks(vidreader,sal,bg,num_prev_frames=1,threaded=False,num_blo
 			task = pending.popleft()
 			idx,fgmask,bgmask  = task.get()
 			frameFgMasks.extend(fgmask); frameBgMasks.extend(bgmask);
-			#print 'Computing Mask ... {0}%\r'.format((idx*100/N)),
+			print 'Computing Mask ... {0}%\r'.format((idx*100/N)),
 		if len(pending) < threadn and frameIdx-num_prev_frames-num_blocks < N:
 			(cnt,frames) = vidreader.read(frameIdx-num_prev_frames-num_blocks,num_prev_frames+num_blocks);
 			if cnt >= num_prev_frames:
@@ -72,14 +72,14 @@ def compute_fgbg_masks(vidreader,sal,bg,num_prev_frames=1,threaded=False,num_blo
 		if len(pending) == 0:
 			break;
 	time_taken = time.time()-start;	
-	#print "Computing Mask ... [DONE] in ",time_taken," seconds"
+	print "Computing Mask ... [DONE] in ",time_taken," seconds"
 	return (frameFgMasks,frameBgMasks)
 
 def perform_smoothing(vidreader,smoothner,fgMasks,bgMasks,num_blocks=4,skip_frames = 0):
 	start = time.time();	frameNewMasks = []; 
 	frame_idx = 2*num_blocks;  N = vidreader.frames;
 	while(frame_idx < N):
-		#print 'Smoothning Masks... {0}%\r'.format((frame_idx*100/N)),
+		print 'Smoothning Masks... {0}%\r'.format((frame_idx*100/N)),
 		(num_frames,frames) = vidreader.read(skip_frames + frame_idx-2*num_blocks,2*num_blocks);
 		if num_frames > num_blocks:
 			start_idx = num_blocks/2; end_idx = min(3*num_blocks/2,num_frames);
@@ -88,7 +88,7 @@ def perform_smoothing(vidreader,smoothner,fgMasks,bgMasks,num_blocks=4,skip_fram
 			frameNewMasks.extend(newMasks);
 		frame_idx += num_blocks
 	time_taken = time.time()-start;	
-	#print "Smoothning Masks ... [DONE] in ",time_taken," seconds"
+	print "Smoothning Masks ... [DONE] in ",time_taken," seconds"
 	return frameNewMasks;
 
 def perform_tracking(vidreader,smoothMasks,num_blocks,num_prev_frames,num_objects=1):
@@ -97,12 +97,14 @@ def perform_tracking(vidreader,smoothMasks,num_blocks,num_prev_frames,num_object
 	prev_rects = [np.array([vidreader.width/4,vidreader.height/4,\
 						vidreader.width/2,vidreader.height/2],\
 						dtype=np.float32) for idx in range(num_objects)];
+	prev_centers =  [np.array([vidreader.width/2,vidreader.height/2],
+						dtype=np.float32) for idx in range(num_objects)];
 	vidreader.__reset__();	N = vidreader.frames;
 	skip_frames = num_prev_frames + num_blocks/2;
 	frame_idx = 0; numFrames= len(smoothMasks);
 	frame_all_window_center = []; window_size = np.zeros((num_objects,2));
 	while(frame_idx < numFrames):
-		#print 'Tracking ... {0}%\r'.format((frame_idx*100/N)),
+		print 'Tracking ... {0}%\r'.format((frame_idx*100/N)),
 		(cnt,frames) = vidreader.read(frame_idx+skip_frames,num_blocks);
 		if cnt > 1:
 			window_frames = tracker.track_object(frames,smoothMasks[frame_idx:frame_idx+cnt]);
@@ -114,14 +116,16 @@ def perform_tracking(vidreader,smoothMasks,num_blocks,num_prev_frames,num_object
 					rect = np.array([window[0],window[1],window[2]-window[0],window[3]-window[1]],dtype=np.float32);
 					cv2.accumulateWeighted(rect,prev_rects[idx],0.1,None);
 					window_center = prev_rects[idx][:2]+(prev_rects[idx][2:]/2); 
+					cv2.accumulateWeighted(window_center,prev_centers[idx],0.3,None);
+					window_center = prev_centers[idx].copy();
 					window_size[idx] = np.maximum(window_size[idx],prev_rects[idx][2:]);
 					all_window_center.extend([window_center]);
 				frame_all_window_center.extend([all_window_center]);
 		frame_idx += num_blocks;
 	time_taken = time.time()-start;	
-	#print "Tracking .... [DONE] in ",time_taken," seconds"
+	print "Tracking .... [DONE] in ",time_taken," seconds"
 	return frame_all_window_center,window_size
-	
+
 def crop_frame(frame,window_center,window_size,ac_shape,rsz_shape):
 	zero_frame = np.zeros((rsz_shape[1],rsz_shape[0],3));
 	left = np.array(window_center - window_size/2,dtype=np.int8);
@@ -137,7 +141,7 @@ def crop_frame(frame,window_center,window_size,ac_shape,rsz_shape):
 	else:
 		zero_frame[y_l:y_l+_shape[0],x_l:x_l+_shape[1]]=_frame;
 	return np.uint8(zero_frame);
-
+"""	
 def write_video(write_path,vidreader,smoothMasks,window_centers,window_size,num_blocks,
 					num_prev_frames,rsz_shape=[80,60]):
 	create_folder_structure_if_not_exists(write_path);
@@ -153,7 +157,37 @@ def write_video(write_path,vidreader,smoothMasks,window_centers,window_size,num_
 		frame = crop_frame(frame,window_centers[frame_idx][0],window_size,shape,rsz_shape);
 		vidwriter.write(np.uint8(frame))
 	vidwriter.close();	
+"""
 
+def draw_rect(frame,window_centers,window_sizes,ac_shape):
+	for idx,window_center in enumerate(window_centers):
+		window_size = np.uint8(window_sizes[idx]);
+		left = np.array(window_center - window_size/2,dtype=np.int8);
+		left[0] = min(left[0],ac_shape[0]-window_size[0]); left[0] = max(left[0],0)
+		left[1] = min(left[1],ac_shape[1]-window_size[1]); left[1] = max(left[1],0)
+		top_left = (left[0],left[1]); bottom_right = (left[0]+window_size[0],left[1]+window_size[1]);
+		cv2.rectangle(frame,top_left, bottom_right, 255, 2)
+	return np.uint8(frame);
+	
+def write_video(write_path,vidreader,smoothMasks,window_centers,window_sizes,num_blocks,
+					num_prev_frames,rsz_shape=[80,60]):
+	create_folder_structure_if_not_exists(write_path);
+	shape = [vidreader.width, vidreader.height];
+	vidwriter = VideoWriter(write_path,vidreader.width,vidreader.height);
+	vidwriter.build();	vidreader.__reset__();	
+	skip_frames = num_prev_frames + num_blocks/2; vidreader.skip_frames(skip_frames);
+	frame_idx = 0; numFrames= len(smoothMasks); 	
+	while(frame_idx < numFrames):
+		frame = vidreader.read_next();
+		if frame is None:
+			break;
+		frame = draw_rect(frame,window_centers[frame_idx],window_sizes,shape);
+		name = "test_results/tracking/track{0}.png".format(frame_idx);
+		cv2.imwrite(name,frame);
+		vidwriter.write(np.uint8(frame))
+		frame_idx += 1;
+	vidwriter.close();	
+	
 def open_write_header(extract_path):
 	create_folder_structure_if_not_exists(extract_path);
 	_file = open(extract_path,'w');
@@ -210,27 +244,11 @@ def process(vidreader,sal,bg,smoothner,num_prev_frames=3 ,num_blocks=4, write_pa
 		bgImpl = None;
 		
 	if not write_path is None:
-		write_video(write_path,vidreader,smoothMasks,window_centers,np.uint8(window_size[0]),
+		write_video(write_path,vidreader,smoothMasks,window_centers,window_size,
 					num_blocks,num_prev_frames,rsz_shape)
 	if not extract_path is None:
 		extract_feats(extract_path,vidreader,smoothMasks,window_centers,np.uint8(window_size[0]),
 					num_blocks,num_prev_frames,rsz_shape,write_gray,bgImpl,window,overlap);
-		
-	"""
-	frame_idx = 0; numFrames= len(smoothMasks);
-	vidwriter = VideoWriter(out_path,2*vidreader.width,vidreader.height)
-	vidwriter.build();
-	vidreader.__reset__();	N = vidreader.frames; skip_frames = num_prev_frames + num_blocks/2;
-	vidreader.skip_frames(skip_frames);
-	while(frame_idx < numFrames):
-		frame = vidreader.read_next();
-		if frame is None:
-			break;
-		write_block(vidwriter,frame,smoothMasks[frame_idx],fgMasks[frame_idx + num_blocks/2],\
-						window_centers[frame_idx],window_size);
-		frame_idx += 1
-	vidreader.close();
-	"""
 	
 	
 

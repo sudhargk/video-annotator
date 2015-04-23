@@ -18,43 +18,44 @@ class GMMBased(Smoothing):
 						
 	
 	def __compute_mean__(self,mask_feats):
-		#start_time = time.time();
 		cluster = KMeans(init='k-means++', n_clusters=self.numMixtures,max_iter = 10,
 						random_state=RANDOM)
-		cluster.fit(mask_feats)
-		#print "building kmeans : ",time.time()-start_time	
+		if len(mask_feats)==0:
+			return None;
+		cluster.fit(mask_feats)	
 		return cluster.cluster_centers_;
-			
-	def __build_model__(self,fg_mask_feats,bg_mask_feats):
-		if self.fg_gmm is None and self.bg_gmm is None:
-			fg_cl_means = self.__compute_mean__(fg_mask_feats);
-			bg_cl_means = self.__compute_mean__(bg_mask_feats);
-			self.fg_gmm = GMM(n_components=self.numMixtures,covariance_type='diag',n_iter=4,
+	
+	def __fit_model__(self,model,mask_feats):
+		if model is None:
+			cl_means = self.__compute_mean__(mask_feats);
+			if not cl_means is None:
+				model= GMM(n_components=self.numMixtures,covariance_type='diag',n_iter=4,
 						init_params='wc');
-			self.bg_gmm = GMM(n_components=self.numMixtures,covariance_type='diag',n_iter=4,
-						init_params='wc',random_state=RANDOM);
-			self.fg_gmm.means_ = fg_cl_means;	self.bg_gmm.means_ = bg_cl_means;
-		else:
-			fg_covars = self.fg_gmm.covars_; bg_covars = self.bg_gmm.covars_;
-			fg_weights = self.fg_gmm.weights_; bg_weights = self.bg_gmm.weights_;
-			fg_means = self.fg_gmm.means_; bg_means = self.bg_gmm.means_;
-			self.fg_gmm = GMM(n_components=self.numMixtures,covariance_type='diag',n_iter=4,
-						init_params='');
-			self.bg_gmm = GMM(n_components=self.numMixtures,covariance_type='diag',n_iter=4,
-						init_params='');
-			self.fg_gmm.means_ = fg_means;		self.bg_gmm.means_ = bg_means;
-			self.fg_gmm.covars_ = fg_covars;	self.bg_gmm.covars_ = bg_covars;
-			self.fg_gmm.weights_ = fg_weights;	self.bg_gmm.weights_ = bg_weights;
-			
-		self.fg_gmm.fit(fg_mask_feats);
-		self.bg_gmm.fit(bg_mask_feats);
+				model.means_ = cl_means;
+			"""
+			else:
+				_covars = model.covars_; _weights = model.weights_; _means = model.means_
+				model = GMM(n_components=self.numMixtures,covariance_type='diag',n_iter=4,
+								init_params='');
+				model.means_ = _means; model.covars_ = _covars;	model.weights_ = _weights;
+			"""
+		if len(mask_feats)>0:
+			model.fit(mask_feats);
+		return model;
+		
+	def __build_model__(self,fg_mask_feats,bg_mask_feats):
+		self.fg_gmm = self.__fit_model__(self.fg_gmm,fg_mask_feats);
+		self.bg_gmm = self.__fit_model__(self.bg_gmm,bg_mask_feats);
 		return (self.fg_gmm,self.bg_gmm);
 		
 	def __get_score__ (self,block,frame_feats,shape,gmm):
 		assert(shape[0]*shape[1] == frame_feats.__len__())
-		fg_score = gmm[0].score(frame_feats)
-		bg_score = gmm[1].score(frame_feats)
-		frames_mask =  ( fg_score> bg_score).reshape((shape[0],shape[1]))
+		if gmm[0] is not None and gmm[1] is not None:
+			fg_score = gmm[0].score(frame_feats)
+			bg_score = gmm[1].score(frame_feats)		
+			frames_mask =  (fg_score> bg_score).reshape((shape[0],shape[1]))
+		else:
+			frames_mask =  np.zeros((shape[0],shape[1]),dtype=np.uint8);
 		return np.uint8(frames_mask);
 		
 	

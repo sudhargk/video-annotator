@@ -63,7 +63,7 @@ class EigenBased(Smoothing):
 			smoothFrames = [idx for idx in smoothFrames if idx < numBlocks];
 		newMasks = [self.__computeNewMask__(blockFeats[frameIdx*frameSize:(frameIdx+1)*frameSize],shape,model) 
 							for frameIdx in smoothFrames]
-		newMasks= self.__post_process__(fgMasks,newMasks);
+		newMasks= self.__post_process__(fgmasks,newMasks);
 		return newMasks
 		
 		
