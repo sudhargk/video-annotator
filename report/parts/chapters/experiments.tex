@@ -1,6 +1,78 @@
 \chapter{EXPERIMENTS AND RESULTS}
-\section{Introduction}
-\section{Test Saliency}
-\section{Test Event Localization}
-\section{Test Event Recognition} 
+This chapter covers all the experiments justifying the appropriate techniques chosen for event recognition. First evaluation of different saliency techniques are made on weizmann segmentation dataset. Then  evaluate the localization algorithm on the change detection dataset and later examine  event recognition on the UCF-50 dataset.
+\section{Evaluation of Saliency}
+\label{sec:ES}
+In section \ref{sec:sal}, different techniques for estimation of saliency had been discussed, comparison of the result for these techniques can be seen in Table \ref{tab:salOneObj} and Table \ref{tab:salTwoObj}. Evaluation are done on weizmann segmentation dataset which has 200 image with ground truth segmentations.The database only includes images that clearly depict one or two object/s in the foreground that differ from its surroundings by either intensity, texture, or other low level cues to avoid dubiousness.    HCB, CAB do not yield many positives, while SDB generates many positives, most of which are not true positives. RC+D and RC are region contrast with and without distribution measure. RC+D works well for one object while for multiple object RC performs better.
+\begin{table}[htbp]
+   \caption{Results for the single object segmentation}
+   \begin{center}
+   \begin{tabular}{|l|c|c|c|} \hline
+     methods & precision & recall & f-measure \\ \hline
+     HCB & 0.425 & 0.312 & 0.294 \\
+	 CAB & 0.418 & 0.363 & 0.355 \\
+ 	 SDB & 0.469 & 0.735 & 0.514 \\
+	 RC  & 0.772 & 0.769 & 0.730 \\
+	 RC~+~D & 0.703	& 0.862 & 0.733	\\ \hline
+   \end{tabular}
+   \label{tab:salOneObj}
+   \medskip \small 
+   \end{center}
+ \end{table}
+\begin{table}[htbp]
+   \caption{Results for the multiple object segmentation}
+   \begin{center}
+   \begin{tabular}{|l|c|c|c|} \hline
+     methods & precision & recall & f-measure \\ \hline
+     HCB & 0.396 & 0.434 & 0.339 \\
+	 CAB & 0.573 & 0.475 & 0.473 \\
+ 	 SDB & 0.360 & 0.674 & 0.392 \\
+	 RC  & 0.763 & 0.772 & 0.732 \\ \hline
+   \end{tabular}
+   \label{tab:salTwoObj}
+   \end{center}
+ \end{table} 
+ It is quite evident from the observation that the RC outperforms all the techniques discussed. Hence RC is being considered for the rest of experiments  for measuring the saliency of individual frames.
+\section{Evaluation of Localization}
+Evaluation for localization of the event has been done on change detection dataset \citep{cdnet}. It provides  a realistic, camera-captured (no CGI), diverse set of videos with challenges  like dynamic background, camera jitter, intermittent object motion, shadows, thermal signatures and more. Evaluation on the following dataset helps measure the performance  of the proposed algorithm.
+\begin{table}[htbp]
+   \caption{Results of event localization on change detection dataset}
+   \begin{center}
+   \begin{tabular}{|l|c|c|c|} \hline
+        challenges & precision & recall & f-measure \\ \hline
+		badWeather & 0.16 & 0.78 & 0.26\\
+		baseline & 0.19 & 0.83 & 0.28\\
+		cameraJitter & 0.13 & 0.70 & 0.21 \\
+		dynamicBackground & 0.11 & 0.55 &  0.18\\
+		intermittentObjectMotion & 0.11 & 0.62 & 0.18 \\
+		lowFramerate & 0.14 & 0.44 & 0.20 \\
+		nightVideos & 0.50 & 0.70 & 0.14 \\
+		PTZ & 0.05 & 0.74 & 0.09\\
+		shadow & 0.13 & 0.64 & 0.20\\ \hline
+   \end{tabular}
+   \label{tab:salTwoObj}
+   \end{center}
+ \end{table} 
+The precision for the estimation of localized mask is not so high because the approach of smoothening considers background to be present in every frame which was not the case in the dataset. Also in the dataset, the region of interest within a given frame are provided and that are not utilized for the prediction of localization mask. Still it is evident from the results that the GMM based smoothening is able to capture the interesting regions with a video and would help in obtaining the STV.
+
+\par All the experiments are tested using the indigenous CNN on  Xeon(R) CPU E5-2650 v2 @ 2.60GHz in CPU mode and Intel(R) Xeon(R) CPU E3-1240 v3 @ 3.40GHz in the GPU mode. With the support of very high primary memory in  the first system, entire dataset was loaded allowing reduced secondary memory access
+
+\section{Evaluation of Video Classification} 
+As discussed in chapter \ref{chap:eventrec}, CNN's are constructed for the video classification . Evaluation of the recognition is done on UCF-50 dataset, which is an action recognition dataset with 50 action categories, consisting of realistic videos taken from youtube. This data set is very difficult because of the diverse object appearance and pose, object scale, viewpoint, cluttered background, illumination conditions, etc. The dataset includes $\approx{5}$ hours of training data. Some of the approaches experimented for recognition of event are discussed below,
+\begin{enumerate}
+	\item{\textbf{Approach 1:} In this approach complete five frame context was considered, and in a frame active pixel obtained from localization are replace by gray value while the inactive pixel are replace by zeros. The frames are resized to 120x90 dimension for faster evaluation. CNN constitute of three convolutional and sub-sampling layer,  followed by a single MLP layer of 250.}
+	\item{\textbf{Approach 2:} Again a five frame context was considered, instead of entire frame only the window obtained from tracking is provided.  Windows are smartly resized to 80x60 , so that resolution of the window are not altered. All three channels are given to CNN .CNN constitute of three convolutional and sub-sampling layer,  followed by a single MLP layer of 250.}
+	\item{\textbf{Approach 3:} It is very similar to the Approach 2, where instead of all color channel, gray channel and foreground mask are provided input filters.}	
+\end{enumerate}
+\begin{table}[htbp]
+   \caption{Results of event localization on change detection dataset}
+   \begin{center}
+   \begin{tabular}{|l|c|c|c|} \hline
+        challenges & precision & recall & f-measure \\ \hline
+		shadow & 0.64 & & \\ \hline
+   \end{tabular}
+   \label{tab:salTwoObj}
+   \end{center}
+ \end{table} 
+Among the three approach it can be clearly observed from the table that the approach 2 and approach 3 to stand out compared to first approach. Also the number of examples in different class of videos were skewed, hence random examples are left out to have nearly same number of examples in each class. Based on the dataset different class of videos are clubbed to form groups like Human-Object Interaction, Body-Motion Only, Human-Human Interaction, Playing Musical Instruments and Sports. Different classifier for each group are built with the same approach, which helped in improving the prediction of individual classes. 
 \section{Summary}
+RC combined with simple FD are used for extracting localization mask which are smoothened using GMM based smooethening. A hierarchical manner of classifying the classes of videos was preferred over the single classifier classifying  all the classes because of faster convergence and parallel training of individual groups. This results obtained using the following strategy were state of art results for the UCF dataset.  
