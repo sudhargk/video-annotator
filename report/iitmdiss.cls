@@ -129,7 +129,7 @@ footskip=30pt,bottom=1in]{geometry}
 % \department{department name} -- user macro to declare name of department.
 \def\department#1{\gdef\@department{#1}}
 
-\RequirePackage[dvips]{graphicx}
+\RequirePackage{graphicx}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The title page
