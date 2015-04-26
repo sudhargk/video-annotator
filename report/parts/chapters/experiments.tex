@@ -1,5 +1,6 @@
-\chapter{EXPERIMENTAl RESULTS}
-All the experiments are performed for justifying the appropriate set of techniques that are chosen for event recognition. The first stage of the task involve localization, which incorporate background subtraction, saliency estimation and temporal smoothening as discussed in Chapter \ref{chap:eventLo}. Evaluation of background subtraction was done intuitively, among the techniques frame-differencing was chosen over eigen subtraction for its pace. In case of saliency estimation tests were performed on weizmann segmentation dataset which is discussed in \ref{sec:EvS}. End to end assesment of the localization algorithm was done on the change detection dataset, while recognition was examined on the UCF-50 dataset.
+\chapter{EXPERIMENTAL RESULTS}
+\label{chap:exp}
+This chapter justifies the reason for choosing appropriate set of techniques for event recognition based on  experiments conducted. The first stage of the task involve localization, which incorporate background subtraction, saliency estimation and temporal smoothening as discussed in Chapter \ref{chap:eventLo}. Evaluation of background subtraction was done intuitively, among the techniques frame-differencing was chosen over eigen subtraction for its pace. In case of saliency estimation tests were performed on weizmann segmentation dataset which is discussed in \ref{sec:EvS}. End to end assessment of the localization algorithm was done on the change detection dataset, while recognition was examined on the UCF-50 dataset.
 
 \section{Evaluation of Saliency}
 \label{sec:EvS}
@@ -42,7 +43,7 @@ Localization of the event for change detection dataset \citep{cdnet} is performe
    \begin{center}
    \begin{tabular}{|l|c|c|c|} \hline
         \textbf{challenges} & \textbf{precision} & \textbf{recall} & \textbf{f-measure} \\ \hline
-		badWeather & 0.16 & 0.78 & 0.26\\
+		bad Weather & 0.16 & 0.78 & 0.26\\
 		baseline & 0.19 & 0.83 & 0.28\\
 		camera Jitter & 0.13 & 0.70 & 0.21 \\
 		dynamic Background & 0.11 & 0.55 &  0.18\\
@@ -72,7 +73,7 @@ Video classification are done using 3d CNN's, the experimental results for the e
         I & & & & & & 40.14\\ \hline
 		II & 8.63 & 3.85 & 1.36 & 2.21 & 9.21 & \\ \hline
 		II (after norm) & 8.51 & 3.69 & 1.33 & 2.19 & 9.08 & \\ \hline		 
-		III (after norm) & 27.45 &  & 5.48 & &  & 40.14\\ \hline
+		III (after norm) & 27.45 &  & 5.48 & & 33.24 & \\ \hline
    \end{tabular}
    \label{tab:recognition}
    \medskip \small 
