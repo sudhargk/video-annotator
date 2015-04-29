@@ -1,7 +1,7 @@
 \appendix
 \label{app:pydnn}
 \chapter{How to Use : Python-DNN}
-Python-dnn uses python (and theano) to implement major Deep Learning Networks. The toolkit currently supports neural network model CNN, SDA, DBN and more. It also encompass a  general DNN  kit with support of multiple activation functions. Python-dnn functions as toolkit as well as library allowing to extend and build wrappers over it.
+Python-dnn uses python (and theano) to implement major Deep Learning Networks.  The toolkit currently supports neural network model CNN, SDA, DBN and more.  It also encompass a  general DNN  kit with support of multiple activation functions.  Python-dnn functions as toolkit as well as library allowing to extend and build wrappers over it.
 \section{Installation}
 Installing  the python-dnn as library can be easily done using the pip utility.
 \begin{lstlisting}[language=bash,basicstyle=\small] 
@@ -198,7 +198,7 @@ class\_index\_file constitute of list of data filenames belonging to single clas
 	\end{tabular}		
 \end{center} 
 \end{table} 
-\noindent It is quite evident in all model configuration the activation functions are crucial. The activation function are used to transform the activation level of a unit (neuron) into an output signal. Generally, activation functions have a "squashing" effect. Python-DNN currently support following activation functions,
+\noindent It is quite evident in all model configuration the activation functions are crucial.  The activation function are used to transform the activation level of a unit (neuron) into an output signal.  Generally, activation functions have a "squashing" effect.  Python-DNN currently support following activation functions,
 \begin{itemize}
 \item {\textbf{sigmoid:} sigmoid function with equation: $f(x) = \frac{1}{(1 + \exp^{-x}}$. This is an S-shaped (sigmoid) curve, with output in the range $(0,1)$.}
 \item {\textbf{tanh:} hyperbolic tangent function is a sigmoid curve, like the logistic function, except that output lies in the range $(-1,+1)$.} 
@@ -210,13 +210,13 @@ class\_index\_file constitute of list of data filenames belonging to single clas
 \section{Usage}
 Quick steps for modelling any dataset using the toolkit,
 \begin{itemize}
-	\item{\textbf{Step 1 : Prepare Dataset:} The datasets must converted to one of the following data formats NP/T1/T2 formats. }
-	\item{\textbf{Step 2 : Configure model:} A sample model configuration is copied from a standard dataset, depending on the type of deep neural network set the value of \textit{nnetType} and change \textit{wdir} to the result directory location. Update \textit{n\_ins} to input shape of neural network layer, for e.g 2d CNN accepting an image with dimension 80x60 with all 3 channel could be represented as [3,60,80],be careful in case of CNN's order plays crucial role. Set \textit{n\_outs} to number of classes for supervised learning task. Update the \textit{processes} flag based on type of model type like CNN do not have pre-training while for RBM and SDA pre-training is default.}
-	\item {\textbf{Step 3 : Configure data:} A sample data configuration is copied to same directory of the model configuration file. Set the \textit{base\_path} and \textit{filename} to the directory of data and NP/T1/T2 filename respectively. The parameter \textit{partition} need to be set properly in case of large dataset, assign value (in MB) less than primary memory/gpu memory. Update the \textit{reader\_type} based on data format of the file. \textit{input\_shape} define the actual shape in which data was flattened while \textit{dim\_shuffle} allow to reorder the dimension as per the input to neural network.}
-	\item{\textbf{Step 4 : Configure neural net:} A sample nnet configuration is copied to same directory of model configuration file. Do necessary changes as per the input shape of the data.}	
-	\item{\textbf{Step 5 : Set environment flags:} For cpu mode, set \textit{device} to cpu, while for gpu mode, set \textit{device} to gpu. Set the following environment flag.
+	\item{\textbf{Step 1 : Prepare Dataset:} Convert the datasets to one of the following data formats NP/T1/T2 formats. }
+	\item{\textbf{Step 2 : Configure model:} Copy the sample model configuration from a standard dataset, depending on the type of deep neural network set the value of \textit{nnetType} and change \textit{wdir} to the result directory location.  Update \textit{n\_ins} to input shape of neural network layer, for e.g 2d CNN accepting an image with dimension 80x60 with all 3 channel could be represented as [3,60,80],be careful in case of CNN's order plays crucial role.  Set \textit{n\_outs} to number of classes for supervised learning task.  Update the \textit{processes} flag based on type of model type like CNN do not have pre-training while for RBM and SDA pre-training is default.}
+	\item {\textbf{Step 3 : Configure data:} Copy the sample model configuration to same directory of the model configuration file.  Set the \textit{base\_path} and \textit{filename} to the directory of data and NP/T1/T2 filename respectively.  The parameter \textit{partition} need to be set properly in case of large dataset, assign value (in MB) less than primary memory/gpu memory.  Update the \textit{reader\_type} based on data format of the file.  \textit{input\_shape} define the actual shape in which data was flattened while \textit{dim\_shuffle} allow to reorder the dimension as per the input to neural network.}
+	\item{\textbf{Step 4 : Configure neural net:} Copy the sample model configuration to same directory of model configuration file. Do necessary changes as per the input shape of the data.}	
+	\item{\textbf{Step 5 : Set environment flags:} For cpu mode, set \textit{device} to cpu, while for gpu mode, set \textit{device} to gpu. Set the following environment flag,
 	\begin{lstlisting}[language=bash,basicstyle=\small] 
-		THEANO_FLAGS=device=cpu,floatX=float32
+		export THEANO_FLAGS=device=cpu,floatX=float32
 	\end{lstlisting}} 
 	
 	\item{\textbf{Step 6 : Run toolkit:} The toolkit can be run by executing the \textit{python-dnn} script where \textit{model.conf} is the model configuration file.
