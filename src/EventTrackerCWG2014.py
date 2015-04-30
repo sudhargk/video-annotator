@@ -98,17 +98,24 @@ def perform_localization(vidreader,roi_mask,smoothner,fgMasks,bgMasks,gtMasks,
 	create_folder_structure_if_not_exists(out_dir);
 	while(frame_idx +num_blocks  < N):
 		print status.format((str(frame_idx*100/N)+'%')),
-		(num_frames,frames) = vidreader.read( frame_idx-2*num_blocks,2*num_blocks);
+		(num_frames,frames) = vidreader.read(frame_idx-2*num_blocks,2*num_blocks);
 		if num_frames > num_blocks:
 			start_idx = num_blocks/2; end_idx = min(3*num_blocks/2,num_frames);
 			s = frame_idx-2*num_blocks-skip_frames; e = s + num_frames;
 			newMasks = smoothner.process(frames,fgMasks[s:e],bgMasks[s:e],range(start_idx,end_idx));
 			#newMasks = __morphologicalOps__(newMasks);
 			groundTruthMasks = gtMasks[s+num_blocks/2:s+num_blocks/2+newMasks.__len__()];	
+			_frames = frames[num_blocks/2:num_blocks/2+newMasks.__len__()];
 			tmp_idx= 0;
 			for (gt,my) in zip(groundTruthMasks,newMasks):
-				out = np.hstack((gt,my))*255;
-				path = out_dir+os.sep+str(frame_idx-2*num_blocks-skip_frames+tmp_idx)+'.png'
+				zero = np.zeros(gt.shape[:2],dtype=np.uint8)
+				my_mask = np.uint8(np.dstack((zero,zero,my*255)))
+				out = cv2.addWeighted(_frames[tmp_idx],0.6,my_mask,0.4,0);
+				path = out_dir+os.sep+'sal_'+str(frame_idx-2*num_blocks-skip_frames+tmp_idx)+'.png'
+				cv2.imwrite(path,out)
+				gt_mask = np.uint8(np.dstack((zero,zero,gt*255)));
+				out = cv2.addWeighted(_frames[tmp_idx],0.6,gt_mask,0.4,0);
+				path = out_dir+os.sep+'gt_'+str(frame_idx-2*num_blocks-skip_frames+tmp_idx)+'.png'
 				cv2.imwrite(path,out)
 				frame_confusion=comparator(gt,my,roi_mask);
 				updateConfusion(confusion,frame_confusion);
@@ -126,7 +133,7 @@ def process(vidreader,sal,bg,smoothner,num_prev_frames ,num_blocks,
 	fgMasks,bgMasks,gtMasks = compute_fgbg_masks(vidreader,gtreader,sal,bg,num_prev_frames,
 					startFrame,endFrame);
 	confusion = perform_localization(vidreader,roi_mask,smoothner,fgMasks,bgMasks,
-					gtMasks,num_blocks,startFrame,endFrame);
+					gtMasks,num_blocks,startFrame+num_prev_frames,endFrame);
 	vidreader.close();
 	gtreader.close();
 	return confusion;

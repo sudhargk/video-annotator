@@ -19,64 +19,106 @@ Python-dnn requires
 git clone git://github.com/IITM-DONLAB/python-dnn.git
 \end{lstlisting}
 
-\section{Toolkit Configuration} 
+\section{Tool-kit Configuration} 
+All the configuration are in \textit{json} which is a open standard format for transmitting  attribute-value pairs in human-readable form.
 \subsubsection{Model Configuration (model.conf)}
 \begin{table}[!htbp]
    \begin{center}
    \begin{tabular}{|l|p{10cm}|l|} \hline
    	\textbf{parameter} & \textbf{description} & \textbf{default}\\  \hline
-     *nnetType & type of Network (CNN/RBM/SDA/DNN) & \\
-     *train\_data & working directory containing data configuration and output \\ \hline
-	 *wdir & working directory & \\ \hline
- 	 *data\_spec & path for data specification relative to model.conf & \\ \hline
-	 *nnet\_spec & path for network configuration specification relative to model.conf & \\ \hline
-	 *output\_file & path for network model file relative to wdir & \\ \hline
-	 input\_file & path for pre-trained/fine-tuned model relative to wdir. & \\ \hline
-	 random\_seed & random seed for initialization of weights & none \\ \hline
-	 logger\_level & logger level : 'INFO','DEBUG' and 'ERROR' & 'INFO' \\ \hline
-	 batch\_size & mini batch size  & 128 \\ \hline
-	 *n\_ins & input dimension  & \\ \hline
-	 *n\_outs & output dimension (num classes) & \\ \hline
-	 finetune & 
+     *\emph{nnetType} & type of Network (CNN/RBM/SDA/DNN) & \\
+     *\emph{train\_data} & working directory containing data configuration and output \\ \hline
+	 *\emph{wdir} & working directory & \\ \hline
+ 	 *\emph{data\_spec} & path for data specification relative to model.conf & \\ \hline
+	 *\emph{nnet\_spec} & path for network configuration specification relative to model.conf & \\ \hline
+	 *\emph{output\_file} & path for network model file relative to wdir & \\ \hline
+	 \emph{input\_file} & path for pre-trained/fine-tuned model relative to wdir. & \\ \hline
+	 \emph{random\_seed} & random seed for initialization of weights & none \\ \hline
+	 \emph{logger\_level} & logger level : 'INFO','DEBUG' and 'ERROR' & 'INFO' \\ \hline
+	 \emph{batch\_size} & mini batch size  & 128 \\ \hline
+	 *\emph{n\_ins} & input dimension  & \\ \hline
+	 *\emph{n\_outs} & output dimension (num classes) & \\ \hline
+	 \emph{finetune\_params} & Refer \nameref{subsec:finetuneparam}	&  \\ \hline
+	 \emph{pretrain\_params} & Refer \nameref{subsec:pretrainparam}	&  \\ \hline
+	 \emph{export\_path} &  path for writing (bottleneck) features relative to model.conf & \\ \hline 	 
+	 \emph{processes} & 
 	 	\begin{tabular}{r|p{6cm}} %\hlne
-	 	 momentum & momentum factor for finetuning \\
-	 	 method & C : constant learning rate  E :exponential decay (default :C) \\
- 	   \end{tabular}	
-	 &  \\ \hline
-	 export\_path &  path for writing (bottleneck) features relative to model.conf & \\ \hline 	 
-	 processes & 
-	 	\begin{tabular}{r|p{6cm}} %\hlne
-	 	 pretraining & to do pre-training or not \\
-	 	 finetuning & to do fine-tuning or not \\
-	 	 testing & to do testing or not \\
-	 	 export\_data & to do feat extraction or not. If true export\_path is mandatory \\
+	 	 \emph{pretraining} & to do pre-training or not \\
+	 	 \emph{finetuning} & to do fine-tuning or not \\
+	 	 \emph{testing} & to do testing or not \\
+	 	 \emph{export\_data} & to do feat extraction or not. If true export\_path is mandatory \\
  	   \end{tabular}	
 	 & false \\ \hline
-	 save\_freq & epoch interval for saving model & \\ \hline 	 	
+	 \emph{save\_freq} & epoch interval for saving model & \\ \hline 	 	
    \end{tabular}		
    \end{center}
  \end{table} 
+\clearpage
+\subsubsection{Pretraining Parameters}
+\label{subsec:pretrainparam}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|p{6cm}|}
+\hline
+ \textbf{parameter}	 & \textbf{default}	 & \textbf{nnet Type}	 & \textbf{description}\\
+\hline
+ \emph{gbrbm\_learning\_rate}	 &     0.005	 &    DBN	 & Pretraining learning rate for gbrbm layer.\\
+ \emph{learning\_rate}	 &      0.08	 &  SDA,DBN	 & Pretraining learning rate (DBN: for all layers except gbrbm layer)\\
+ \emph{epochs}	 &       15	 &    DBN	 & No of Pretraining epochs\\
+ \emph{initial\_momentum}	 &      0.5	 &    DBN	 & The initial momentum factor while pre-training\\
+ \emph{final\_momentum}	 &      0.9	 &    DBN	 & The final momentum factor while pre-training\\
+ \emph{initial\_momentum\_epoch}	 &       5	 &    DBN	 & No: of epochs with the initial momentum factor before switching\\
+ \emph{keep\_layer\_num}	 &       0	 &  SDA,DBN	 & From which layer Pre-Training Should Start.\\
+ \hline
+\end{tabular}
+\end{table}
+\subsubsection{Finetune Parameters}
+\label{subsec:finetuneparam}
+There are two learning rate adjustment technique supported by tool-kit, which are,
+\begin{itemize}
+\item C: Constant learning rate: run `epoch\_num' iterations with `learning\_rate' unchanged
+\item E: Exponential decay: learning rate started initially with \emph{start\_rate}.  If the validation error reduction between two epochs is less than \emph{min\_derror\_decay\_start}, the learning rate is scaled down by \emph{scale\_by}.  The training terminates when the validation error between two epochs is below \emph{min\_derror\_stop}.
+\end{itemize}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{parameter}	& \textbf{description} 				& \textbf{default}\\  \hline
+\emph{momentum} 			& momentum factor for finetuning 				& \\
+\emph{method} 				& E : exponential decay 						& C\\
+					& C : constant learning rate 						& \\
+\emph{learning\_rate}   	& learning rate (in C) 							& 0.08\\
+\emph{epoch\_num}          & number of epochs (in C) 			 		& 10\\
+\emph{start\_rate}         & start learning rate (in E) 					& 0.08 \\
+\emph{scale\_by}           & scaling factor of learning rate (in E)		& 0.5\\
+\emph{min\_derror\_decay\_start}& min error to start scale down (in E) 	& 0.05\\
+\emph{min\_derror\_stop}   & min error to terminate (in E) 	& 0.05 \\
+\emph{min\_epoch\_decay\_start}  & min epoch num to scale down (in E)	& 15\\
+\hline
+\end{tabular}
+\end{table} 
+ 
 \clearpage
 
 \subsubsection{Data Configuration (data.conf)}
 \begin{table}[!htbp]
 \begin{center}
-  \medskip  \small configuration for training/testing/validation.
+  \medskip  \small \textit{Configuration for training/testing/validation}
    \begin{tabular}{|l|p{8cm}|c|} \hline
    	\textbf{parameter} & \textbf{description} & \textbf{default}\\  \hline
- 	*base\_path & Base path of data. &  \\  \hline
-   	*filename &  train/test/val filename & \\  \hline
-	*partition & data size (in MiB) to be loaded in memory & \\  \hline
-	random & allow random ordering  & true \\  \hline
-	random\_seed & seed for random numbers if random is true & \\  \hline 
-	keep\_flatten & flatten vector or reshape to input\_shape & false \\  \hline
-	*reader\_type & reader type : NP/T1/T2. & \\  \hline		
-	*input\_shape & shape of input data & \\  \hline
-	*dim\_shuffle &  shuffle order of the input data &  \\ \hline
+ 	*\emph{base\_path} & Base path of data. &  \\  \hline
+   	*\emph{filename} &  train/test/val filename & \\  \hline
+	*\emph{partition} & data size (in MiB) to be loaded in memory & \\  \hline
+	\emph{random} & allow random ordering  & true \\  \hline
+	\emph{random\_seed} & seed for random numbers if random is true & \\  \hline 
+	\emph{keep\_flatten} & flatten vector or reshape to input\_shape & false \\  \hline
+	*\emph{reader\_type} & reader type : NP/T1/T2. & \\  \hline		
+	*\emph{input\_shape} & shape of input data & \\  \hline
+	*\emph{dim\_shuffle} &  shuffle order of the input data &  \\ \hline
   \end{tabular}		
 \end{center}
 \end{table} 
-\noindent For the purpose of using the toolkit, data have to be in one of the file format.
+\noindent For the purpose of using the tool-kit, data have to be in one of the file format.
 \begin{itemize}
 \item{\textbf {Numpy Format [NP]:}The dataset is stored as single file in binary format in following structure,
 \begin{lstlisting}[language=bash,basicstyle=\small] 
@@ -120,32 +162,32 @@ class\_index\_file constitute of list of data filenames belonging to single clas
 \subsubsection{Network Configuration (nnet.conf)}
 \begin{table}[!htbp]
 \begin{center}
-  \medskip  \small configuration of cnn
+  \medskip  \small \textit{Configuration of CNN}
    \begin{tabular}{|c|p{12cm}|} \hline
    	\textbf{parameter} & \textbf{description} \\  \hline
-   	 cnn & 
+   	 \emph{cnn} & 
 	 \begin{tabular}{c|p{9cm}} %\hlne
-	 layers+ & 
+	 \emph{layers}+ & 
 		\begin{tabular}{r|p{6cm}} %\hlne
-		convmat\_dim & dimension of convolution weights \\  \hline
-		num\_filters & number of feature maps \\  \hline
-		poolsize & max-pooling dimensions \\  \hline
-		update & updated weight during training. \\  \hline
-		activation & activation function used by the layer \\ 
+		\emph{convmat\_dim} & dimension of convolution weights \\  \hline
+		\emph{num\_filters} & number of feature maps \\  \hline
+		\emph{poolsize} & max-pooling dimensions \\  \hline
+		\emph{update} & updated weight during training. \\  \hline
+		\emph{activation} & activation function used by the layer \\ 
 		\end{tabular} \\ \hline
-	  activation & global activation function \\ \hline
-	  use\_fast & use pylearn2 library for faster computation \\ 
+	  \emph{activation} & global activation function \\ \hline
+	  \emph{use\_fast} & use pylearn2 library for faster computation \\ 
  	   \end{tabular}	 \\ \hline
- 	 mlp & 
+ 	 \emph{mlp} & 
 	 \begin{tabular}{c|p{9cm}} %\hlne 
-	  layers &  hidden layer sizes \\ \hline
-	  adv\_activation & 
+	  \emph{layers} &  hidden layer sizes \\ \hline
+	  \emph{adv\_activation} & 
 		\begin{tabular}{r|p{6cm}} %\hlne
-			method &  'maxout','pnorm' \\ \hline
-			pool\_size & pool size (in pnorm) \\ \hline
-			pnorm\_order & norm order for pnorm. (Default: 1) \\
+			\emph{method} &  'maxout','pnorm' \\ \hline
+			\emph{pool\_size} & pool size (in pnorm) \\ \hline
+			\emph{pnorm\_order} & norm order for pnorm. (default: 1) \\
 		\end{tabular} \\ \hline
-	  activation & activation function for mlp layers. (if adv\_activation is used, then either 'linear','relu' or 'cappedrelu') \\ 
+	  \emph{activation} & activation function for mlp layers. (if adv\_activation is used, then either 'linear','relu' or 'cappedrelu') \\ 
  \end{tabular}	 \\ \hline
   \end{tabular}		
 \end{center}
@@ -153,48 +195,48 @@ class\_index\_file constitute of list of data filenames belonging to single clas
 
 \begin{table}[!htbp] 
  \begin{center}
-  	\medskip  \small configuration of dnn
+  	\medskip  \small \textit{Configuration of DNN}
    	\begin{tabular}{|c|p{8cm}|c|} \hline
    	\textbf{parameter} & \textbf{description} & \textbf{default}\\  \hline
-	*hidden\_layers &  RBM layer sizes. & \\ \hline
-	pretrained\_layers & number of layers  pre-trained. & 0 \\ \hline
-	activation & activation function for the layers. (if adv\_activation is used, then either 'linear','relu' or 'cappedrelu') & tanh or linear \\ \hline
-	max\_col\_norm & The max value of norm of gradients (in dropout and maxout)	& null \\ \hline
-	l1\_reg &  l1 norm regularization & 0 \\ \hline
-	l2\_reg &  l2 norm regularization & 0 \\ \hline
-	adv\_activation & 
+	*\emph{hidden\_layers} &  RBM layer sizes. & \\ \hline
+	\emph{pretrained\_layers} & number of layers  pre-trained. & 0 \\ \hline
+	\emph{activation} & activation function for the layers. (if adv\_activation is used, then either 'linear','relu' or 'cappedrelu') & tanh or linear \\ \hline
+	\emph{max\_col\_norm} & The max value of norm of gradients (in dropout and maxout)	& null \\ \hline
+	\emph{l1\_reg} &  l1 norm regularization & 0 \\ \hline
+	\emph{l2\_reg} &  l2 norm regularization & 0 \\ \hline
+	\emph{adv\_activation} & 
 		\begin{tabular}{r|p{5cm}} %\hlne
-		method &  'maxout','pnorm' \\ \hline
-		pool\_size & pool size (in pnorm) \\ \hline
-		pnorm\_order & norm order for pnorm. (Default: 1) \\
+		\emph{method} &  'maxout','pnorm' \\ \hline
+		\emph{pool\_size} & pool size (in pnorm) \\ \hline
+		\emph{pnorm\_order} & norm order for pnorm. (default: 1) \\
 		\end{tabular} & \\ \hline
-	do\_dropout &  use dropout or not & false  \\ \hline
-	dropout\_factor & dropout factors for DNN layers. & [0.0] \\ \hline
-	input\_dropout\_factor & dropout factor for input features & 0.0 \\ \hline
+	\emph{do\_dropout} &  use dropout or not & false  \\ \hline
+	\emph{dropout\_factor} & dropout factors for DNN layers. & [0.0] \\ \hline
+	\emph{input\_dropout\_factor} & dropout factor for input features & 0.0 \\ \hline
 	\end{tabular}
 \end{center}
 \end{table} 
  
 \begin{table}[!htbp] 
  \begin{center}
-  	\medskip  \small configuration of dbn (rbm)
+  	\medskip  \small \textit{Configuration of DBN (RBM)}
 	\begin{tabular}{|c|p{8cm}|c|} \hline
    	\textbf{parameter} & \textbf{description} & \textbf{default}\\  \hline
-	*hidden\_layers &  RBM layer sizes. & \\ \hline
-	activation & activation function for the layers. & tanh \\ \hline
-	pretrained\_layers & number of layers  pre-trained. & 0 \\ \hline
-	first\_layer\_type & 'bb' (Bernoulli-Bernoulli) or 'gb' (Gaussian-Bernoulli) & gb  \\ 	\hline 
+	*\emph{hidden\_layers} &  RBM layer sizes. & \\ \hline
+	\emph{activation} & activation function for the layers. & tanh \\ \hline
+	\emph{pretrained\_layers} & number of layers  pre-trained. & 0 \\ \hline
+	\emph{first\_layer\_type} & 'bb' (Bernoulli-Bernoulli) or 'gb' (Gaussian-Bernoulli) & gb  \\ 	\hline 
 	\end{tabular}		
 \end{center}
 \end{table} 
 \begin{table}[!htbp] 
  \begin{center}
-  	\medskip  \small configuration of dbn (sda)
+  	\medskip  \small \textit{Configuration of DBN (SdA)}
 	\begin{tabular}{|c|p{8cm}|c|} \hline
    	\textbf{parameter} & \textbf{description} & \textbf{default}\\  \hline
-	*hidden\_layers &  hidden denoising autoencoder layer sizes & \\ \hline
-	activation & activation function for the layers & tanh \\ \hline
-	*corruption\_levels & corruption level for each layer &  \\ \hline
+	*\emph{hidden\_layers} &  hidden denoising autoencoder layer sizes & \\ \hline
+	\emph{activation} & activation function for the layers & tanh \\ \hline
+	*\emph{corruption\_levels} & corruption level for each layer &  \\ \hline
 	\end{tabular}		
 \end{center} 
 \end{table} 
@@ -211,17 +253,17 @@ class\_index\_file constitute of list of data filenames belonging to single clas
 Quick steps for modelling any dataset using the toolkit,
 \begin{itemize}
 	\item{\textbf{Step 1 : Prepare Dataset:} Convert the datasets to one of the following data formats NP/T1/T2 formats. }
-	\item{\textbf{Step 2 : Configure model:} Copy the sample model configuration from a standard dataset, depending on the type of deep neural network set the value of \textit{nnetType} and change \textit{wdir} to the result directory location.  Update \textit{n\_ins} to input shape of neural network layer, for e.g 2d CNN accepting an image with dimension 80x60 with all 3 channel could be represented as [3,60,80],be careful in case of CNN's order plays crucial role.  Set \textit{n\_outs} to number of classes for supervised learning task.  Update the \textit{processes} flag based on type of model type like CNN do not have pre-training while for RBM and SDA pre-training is default.}
+	\item{\textbf{Step 2 : Configure model:} Copy the sample model configuration from a standard dataset, depending on the type of deep neural network set the value of \textit{nnetType} and change \textit{wdir} to the result directory location.  Update \textit{n\_ins} to input shape of neural network layer, for e.g 2d CNN accepting an image with dimension 80x60 with all 3 channel could be represented as [3,60,80], be careful in case of CNN's order plays crucial role.  Set \textit{n\_outs} to number of classes for supervised learning task.  Update the \textit{processes} flag based on type of model type like CNN do not have pre-training while for RBM and SDA pre-training is default.}
 	\item {\textbf{Step 3 : Configure data:} Copy the sample model configuration to same directory of the model configuration file.  Set the \textit{base\_path} and \textit{filename} to the directory of data and NP/T1/T2 filename respectively.  The parameter \textit{partition} need to be set properly in case of large dataset, assign value (in MB) less than primary memory/gpu memory.  Update the \textit{reader\_type} based on data format of the file.  \textit{input\_shape} define the actual shape in which data was flattened while \textit{dim\_shuffle} allow to reorder the dimension as per the input to neural network.}
 	\item{\textbf{Step 4 : Configure neural net:} Copy the sample model configuration to same directory of model configuration file. Do necessary changes as per the input shape of the data.}	
-	\item{\textbf{Step 5 : Set environment flags:} For cpu mode, set \textit{device} to cpu, while for gpu mode, set \textit{device} to gpu. Set the following environment flag,
+	\item{\textbf{Step 5 : Set environment flags:} Set \textit{device} to cpu for cpu mode, while for gpu mode, set \textit{device} to gpu. The environment flag can be set as follows ,
 	\begin{lstlisting}[language=bash,basicstyle=\small] 
 		export THEANO_FLAGS=device=cpu,floatX=float32
 	\end{lstlisting}} 
 	
-	\item{\textbf{Step 6 : Run toolkit:} The toolkit can be run by executing the \textit{python-dnn} script where \textit{model.conf} is the model configuration file.
+	\item{\textbf{Step 6 : Run toolkit:} Run the toolkit by executing the \textit{python-dnn} script where \textit{model.conf} is the model configuration file.
 	\begin{lstlisting}[language=bash,basicstyle=\small] 
 		./python-dnn <model.conf>
 	\end{lstlisting}	} 
 \end{itemize}
-
+\noindent Toolkit contains sample configurations for MNIST and CIFAR dataset in \textit{sample\_config} folder.
