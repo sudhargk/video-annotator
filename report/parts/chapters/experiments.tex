@@ -6,7 +6,7 @@ Finally the complete algorithm proposed is evaluated on the UCF-50 dataset by us
 
 \section{Evaluation of Saliency}
 \label{sec:EvS}
-Different techniques for estimation of saliency has been already discussed in section \ref{sec:sal}.  Weizmann segmentation dataset was considered for the evaluation.  It has around 200 image which includes images that clearly depict one or two object/s with ground truth segmentations. The database contains images, whose surroundings differs the foreground  either in intensity, texture, or other low level cues to avoid dubiousness.  The precision, recall and f-measure for different saliency estimation techniques on one and two object/s are shown in Table \ref{tab:salOneObj} and Table \ref{tab:salTwoObj} respectively. 
+Different techniques for estimation of saliency has been already discussed in Section \ref{sec:sal}.  Weizmann segmentation dataset was considered for the evaluation.  It has around 200 images which includes images that clearly depict one or two object/s with ground truth segmentations. The database contains images whose surroundings differs the foreground  either in intensity, texture, or other low level cues to avoid dubiousness.  Precision, recall and f-measure for different saliency estimation techniques on one and two object/s are shown in Table \ref{tab:salOneObj} and Table \ref{tab:salTwoObj} respectively. 
 \par It was observed from the table that the HCB and CAB did not yield many positives, while SDB generated too many positives but not many true positives. Technique RC+D and RC which are region contrast with and without distribution measure was shown to work well for one object and multiple object respectively.
 \begin{table}[htbp]
    \caption{Results for the single object segmentation}
@@ -36,7 +36,7 @@ Different techniques for estimation of saliency has been already discussed in se
    \label{tab:salTwoObj}
    \end{center}
  \end{table} 
-\par Since RC single handedly outperform other techniques it was considered for measuring the saliency of individual frames.  As we expect multiple salient object to exist, RC+D was not preferred for the saliency estimation.
+\par Since RC outperforms other techniques, it was considered for measuring the saliency of individual frames.  As we expect multiple salient object to exist, RC+D was not preferred for the saliency estimation.
  
 \section{Evaluation of Localization}
 \label{sec:EvLoc}
@@ -67,15 +67,15 @@ The change detection dataset \citep{cdnet} provides  a realistic, camera-capture
    \label{tab:evalLoc}
    \end{center}
  \end{table} 
-\par The results of localization of video event for different scenarios on change detection dataset are shown in Table \ref{tab:evalLoc}. For almost all scenarios the precision for the region mask is observed to be not so high, this is because the approach expects foreground to be present on every frame which was not true for the dataset which in turn generated many false positives as it can be observed in Figure \ref{fig:changeDb}.  The dataset also included information on the region of interest which was not considered by the algorithm.  But it is evident from the results that the GMM based temporal smoothening is able to capture the interesting regions within a video and help obtain the spatio temporal volume for event prediction.
+\par The results of localization of video event for different scenarios on change detection dataset are shown in Table \ref{tab:evalLoc}. For almost all scenarios the precision for the region mask is observed to be not so high. This is because the approach expects foreground to be present on every frame which was not true for the dataset which in turn generated many false positives as it can be observed in Figure \ref{fig:changeDb}.  The dataset also included information on the region of interest which was not considered by the algorithm.  But it is evident from the results that the GMM based temporal smoothening is able to capture the interesting regions within a video and helps to obtain the spatio temporal volume for event prediction.
 
 \section{Evaluation of Video Classification} 
 \label{sec:EvVS}
 Video classification is performed using 3D CNNs.  The experimental results for the recognition is obtained for UCF-50 dataset which is an action recognition dataset with 50 action categories,	 containing realistic videos taken from youtube.  This data set is very difficult because of the diverse object appearance (pose), object scale, viewpoint, cluttered background, illumination conditions, etc.  
 \par In the dataset video classes are clubbed to form groups like body-motion (BM), human-object interaction (HOI), playing musical instruments (PI), indoor sports (IS) and outdoor sports (OS).   Advantage of this information was taken by building multiple classifier for each groups, this not only helped in improving the prediction but also enabled building models concurrently. The following approaches were examined on $\approx{5}$ hours of training data of the UCF-50 dataset,
 \begin{enumerate}
-	\item{\textbf{Approach I:} In this approach five frame context was considered, and in a frame active pixel obtained from localization are replaced by gray value while the inactive pixels are replaced by zeros.  Frames are then resized to 120x90 dimension for faster processing.  The CNN consists of three convolutional and sub-sampling layer,  followed by a single MLP layer of size 250.}
-	\item{\textbf{Approach II:} A five frame context was considered, instead of entire frame only the window obtained from tracking is provided.  Windows are smartly resized to 80x60, so that resolution of the window are not altered.  All three channels are given to CNN which constitute of three convolutional and sub-sampling layer,  followed by a single MLP layer of size 250.}
+	\item{\textbf{Approach I:} In this approach five frame context are considered, and in a frame active pixel obtained from localization are replaced by gray value while the inactive pixels are replaced by zeros.  Frames are then resized to 120x90 dimension for faster processing.  The CNN consists of three convolutional and sub-sampling layer,  followed by a single MLP layer of size 250.}
+	\item{\textbf{Approach II:} A five frame context are considered, instead of entire frame only the window obtained from tracking is provided.  Windows are smartly resized to 80x60, so that resolution of the window are not altered.  All three channels are given to CNN which constitute of three convolutional and sub-sampling layer,  followed by a single MLP layer of size 250.}
 	\item{\textbf{Approach III:} It is very similar to the Approach II, where instead of all color channel, gray channel and the frame differencing of consecutive frames are provided as input filters.}	
 \end{enumerate}
 \begin{table}[htbp]

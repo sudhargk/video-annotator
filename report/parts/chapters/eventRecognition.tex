@@ -1,37 +1,51 @@
-\chapter{EVENT RECOGNITION}
+\chapter{EVENT IDENTIFICATION}
  \label{chap:eventrec}
  \section{Introduction}
-Visual event recognition has been observed as a potential area of research in several applications like  content-based video retrieval, human computer interaction and more.  In general the visual event recognition are always modelled as stochastic temporal processes in the semantic space.  The motivation behind it is to capture the dynamic patterns of event through collective evolution of the semantic concept.  One of the most familiar method following this approach is Hidden Markov Model (HMM) which has been a favourite for 	sequential pattern recognition.  However, the HMM's have struggled to incorporate both spatial and temporal context present in the event.  
+Visual event identification has been observed as a potential area of research in several applications like  content-based video retrieval, human computer interaction, etc.  In general the visual event identification are always modelled as stochastic temporal processes in the semantic space.  The motivation behind it is to capture the dynamic patterns of event through collective evolution of the semantic concept.  One of the most familiar method following this approach is Hidden Markov Model (HMM) which has been a favourite for 	sequential pattern recognition.  However, the HMM's have struggled to incorporate both spatial and temporal context present in the event.  
 \par In another approach by ~\cite{YanKe05}, event is treated as a space-time volume in the video sequence.  Volumetric features based on optical flow are extracted for event detection.  These are generally used for videos having only single moving object (human) and action.  For complex activity recognition \citep{YanKe07}, the internet videos are already temporarily localized and they focus on identifying the primitive event.
-\par A common approach for video classification ~\citep{Liu09}~\citep{Niebles10} involves : extracting local region level features, combining features to fixed size video level description and trained a classifier on the features to predict the class labels.  But in these approaches feature extraction plays a crucial role, and features must be revisited again for different videos.  Convolutional Neural Network(CNN) replace all three stages with a single neural network ~\cite{Ji13}, it is trained end to end from raw pixel values to classifier outputs.  However CNN was observed to be computationally expensive and took longer training period to effectively optimize.  With the improvements on GPU hardware,CNN's could be scaled to train networks of millions of parameters.
+\par A common approach for video classification ~\citep{Liu09}~\citep{Niebles10} involves : extracting local region level features, combining features to fixed size video level description and training a classifier on the features to predict the class labels.  But in these approaches feature extraction plays a crucial role, and features must be recomputed again for different videos.  Convolutional Neural Network(CNN) replace all three stages with a single neural network ~\cite{Ji13}, it is trained end to end from raw pixel values to classifier outputs.  However CNN was observed to be computationally expensive and took longer training period to effectively optimize to the solution.  With the improvements on GPU hardware, CNN's could be scaled to train networks of millions of parameters.
 
-\par Section \ref{sec:cnn} outlines the overall framework of CNN and would discuss the reason for choosing it for event recognition task over the existing techniques.  Then we will elaborate the architecture and features supported by the indigenous deep neural network tool kit designed in python in Section \ref{sec:pyDNN}. 
+\par Section \ref{sec:cnn} outlines the overall framework of CNN and would discuss the reason for choosing it for event identification task over the existing techniques.  Then we will elaborate the architecture and features supported by the indigenous deep neural network tool kit designed in python in Section \ref{sec:pyDNN}. 
 
 \section{Convolutional Neural Network (CNN)}
  \label{sec:cnn}
- \par Covolutional neural networks (CNN) are a variant of multi-layer perceptron (MLP) that are designed by studying the complex arrangement of cells in the cats visual cortex.  It comprises of one or more convolutional layers (often with a sub-sampling step), followed by one or more standard MLP.  There are different varieties of CNN based on the dimensionality of input and convolution operator, like CNN-2D, CNN-3D etc.  A major advantage of having CNN is that it learns faster (fewer parameters) compared to MLP with the same number of hidden units.  CNN  also use  gradient based optimization to compute parameters of the model. It is  evident that CNN fits very well onto the visual recognition domain, as it handles very high dimensional data, exploits the topology of image or video and is invariant to small translation and illumination changes.  CNN leverage following concepts to tackle the above mentioned challenges,
+ \par Covolutional neural networks (CNN) are a variant of multi-layer perceptron (MLP) that are designed by studying the complex arrangement of cells in the cats visual cortex.  It comprises of one or more convolutional layers (often with a sub-sampling step), followed by one or more standard MLP.  There are different varieties of CNN based on the dimensionality of input and convolution operator like CNN-2D, CNN-3D etc.  The Figure \ref{fig:cnnarchitecture} depicts a sample CNN architecture with two convolution and subsampling layers followed by a single MLP layer.
+ 
+\begin{figure}[htpb]
+   \begin{center}
+   		{%
+			\setlength{\fboxsep}{5pt}%
+			%\setlength{\fboxrule}{1pt}%
+	    		\fbox{\includegraphics[width=0.98\textwidth]{snaps/cnn.png}}  
+	    }%
+     \caption[] {A sample CNN architecture \footnotemark}
+	\label{fig:cnnarchitecture}  
+   \end{center}
+ \end{figure} 
+\par A major advantage of having CNN is that it learns faster (fewer parameters) compared to MLP with the same number of hidden units.  CNN  also use  gradient based optimization to compute parameters of the model.  It has been shown that CNN fits very well onto the visual recognition domain, as it handles very high dimensional data, exploits the topology of image or video and is invariant to small translation and illumination changes.  CNN leverages following concepts to tackle the above mentioned challenges:
+\footnotetext{\url{http://deeplearning.net/tutorial/lenet.html}}
 \subsection{Local Connectivity}
-It exploits the spatially local correlation, allowing only local connectivity between neurons of adjacent layers.  Hence, every hidden unit is only sensitive to a small block in the visual field, called receptive field. This drastically reduces the number of connections between input and hidden layer which therefore diminishes the number of parameters needed to train the model.
+It exploits the spatially local correlation, allowing only local connectivity between neurons of adjacent layers.  Hence, every hidden unit is only sensitive to a small block in the visual field called receptive field. This drastically reduces the number of connections between input and hidden layer which therefore diminishes the number of parameters needed to train the model.
 \subsection{Shared Filters}
 The hidden units are associated to the receptive field by filters which are shared within a feature map. These filters capture edge like patterns within the receptive field.  Additionally, sharing filters increases learning efficiency by greatly reducing the number of free parameters to be learned.  Apart from reducing parameters, they extract the same feature at every position, which makes every feature map to be equi-variant to any changes in the input.  The shared filters are associated to the receptive field by a dot product operation which can be expressed as a discrete convolution operation.
 \subsection{Pooling/Sub-sampling Hidden Units}
 The sub-sampling layer pools the hidden unit output in the non-overlapping neighbourhood.  Pooling can be either average or maximum.  The max-pooling provides local translation in-variance and is commonly being used.  Pooling also reduces inputs to next layer of feature extraction.  With pooling the feature maps in latter layer extracts coarser features.
 
-\par All these concepts empower CNN to achieve better generalization in the vision problems.  Stacking multiple such layers is very common approach to attain better responsiveness over a larger visual field.  Some architectural tricks such as rectification and contrast normalization are tried for improved result on a large dataset.  The unsupervised pre-training of each filter weight, has helped enhance the robustness of the models built.
+\par All these concepts empower CNN to achieve better generalization in the vision problems.  Stacking multiple such layers is very common approach to attain better responsiveness over a larger visual field.  Some architectural tricks such as rectification and contrast normalization are tried for improved result on a large dataset.  The unsupervised pre-training of each filter weight has helped enhance the robustness of the models built.
 
 \section{Python-DNN Toolkit}
 \label{sec:pyDNN}
-Neural networks can be best implemented using modular, object-oriented approach.  Where each models (dnn, sda, cnn) are implemented as a different class with member functions performing pre-training (an unsupervised learning), fine-tuning (supervised learning), testing , loading and saving the model.  This approach enable reuse of the code for the most of the network models.  Even though the most of existing toolkits were sophisticated, these toolkits were hard to configure, configuration were either through command line or arguments to a function.  Since neural networks take too many parameters, it gets difficult to understand the purpose of a parameter Hence  \textit{Python-DNN} toolkit was developed.  
+Neural networks can be best implemented using modular, object-oriented approach.  Where each models (dnn, sda, cnn) are implemented as a different class with member functions performing pre-training (an unsupervised learning), fine-tuning (supervised learning), testing , loading and saving the model.  This approach enable reuse of the code for the most of the network models.  Even though the most of existing toolkits were sophisticated, these toolkits were hard to configure. These configuration were either through command line or arguments to a function.  Since neural networks take too many parameters, it gets difficult to understand the purpose of a parameter.  Hence  \textit{Python-DNN} toolkit was developed.  
 \subsection{Architecture}
 The tollkit was implemented in python using the numerical computation library named \textit{Theano} \citep{theano}.  It provides a platform to run efficiently in CPU and GPU architecture.  Architecture of the indigenous DNN toolkit is shown on \ref{fig:architecture}.
 \begin{figure}[htpb]
    \begin{center}
    		{%
 			\setlength{\fboxsep}{5pt}%
-			\setlength{\fboxrule}{1pt}%
-	    		\fbox{\includegraphics[width=0.80\textwidth]{snaps/architecture.eps}}  
+			%\setlength{\fboxrule}{1pt}%
+	    		\fbox{\includegraphics[width=0.90\textwidth]{snaps/colorarchitecture.eps}}  
 	    }%
-     \caption {Python-DNN Architecture}
+     \caption {Python-DNN architecture}
 	 \label{fig:architecture}
    \end{center}
  \end{figure}
@@ -58,4 +72,4 @@ Our implementation is publicly made available in github\footnote{\url{https://gi
 \clearpage
 
 \section{Summary}
-The CNN is a versatile, yet conceptually simple and has been adapted for a wide spectrum of cognitive tasks.  It takes advantage of the 2D/3D structure of an input image (or spectrogram in case of speech signal) by the local connections and shared weights and provide translation invariance by sub-sampling the layer outputs.  The ready to use indigenous toolkit supporting CNN help perform the experiments for event recognition with ease.  In the next chapter study on different methods for obtaining the localized train of frames will be dealt.  These localized train of frames are then given to CNN for the prediction.
+The CNN is a versatile, yet conceptually simple and has been adapted for a wide spectrum of cognitive tasks.  It takes advantage of the 2D/3D structure of an input image (or spectrogram in case of speech signal) by the local connections and shared weights and provide translation invariance by sub-sampling the layer outputs.  The ready to use indigenous toolkit supporting CNN help perform the experiments for event identification with ease.  In the next chapter, the experiments on different techniques for the event recognition will be elaborated.
