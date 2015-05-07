@@ -1,0 +1,11 @@
+JumpingJack
+Lunges
+PullUps
+PushUps
+RockClimbingIndoor
+RopeClimbing
+TaiChi
+Swing
+TrampolineJumping
+WalkingWithDog
+

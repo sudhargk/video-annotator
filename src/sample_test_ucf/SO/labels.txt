@@ -1,0 +1,15 @@
+BaseballPitch
+Biking
+GolfSwing
+HighJump
+HorseRace
+HorseRiding
+JavelinThrow
+Kayaking
+PoleVault
+Rowing
+Skiing
+Skijet
+TennisSwing
+ThrowDiscus
+VolleyballSpiking

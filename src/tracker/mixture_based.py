@@ -74,10 +74,19 @@ class MixtureBased(Tracker):
 		for hsv_frame in hsv_frames:
 			track_windows=[];
 			for idx in range(self.numMixtures):
-				back_proj = cv2.calcBackProject([hsv_frame],[0],self.hist_gmm.means_[idx,:],[0,self.n_bins],1);
-				window = np.array(self.shape_kmeans.cluster_centers_[idx,:],dtype =int)
+				if not self.hist_gmm is None :
+					back_proj = cv2.calcBackProject([hsv_frame],[0],self.hist_gmm.means_[idx,:],[0,self.n_bins],1);
+				else:
+					back_proj = None;
+					
+				if not self.shape_kmeans is None:
+					window = np.array(self.shape_kmeans.cluster_centers_[idx,:],dtype =int)
+				else:
+					shape = hsv_frame.shape[:2]
+					window = np.array([shape[1]/4,shape[0]/4,shape[1]/2,shape[0]/2])
+					
 				window = tuple(window.clip(0))
-				if(window[2]> 10 and window[3]> 10):
+				if(back_proj != None and window[2]> 10 and window[3]> 10):
 					ret,window = cv2.meanShift(back_proj, window, term_crit)
 				window = (window[0],window[1],window[0]+window[2],window[1]+window[3]);
 				track_windows.extend([(window,idx)]);

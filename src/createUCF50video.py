@@ -4,12 +4,14 @@ from io_module.video_reader import VideoReader
 from io_module.video_writer import VideoWriter
 from utils import normalize,create_folder_structure_if_not_exists
 
-def createVideo(datapath,outfileName,shape,duration=120,framerate=20,vidLen=32):
-	vidOutFileName = outfileName + '.avi'
-	labelOutFileName = outfileName + '.txt'
+def createVideo(datapath,group,outfileName,shape,duration=120,framerate=20,vidLen=32):
+	vidOutFileName = outfileName + 'test.avi'
+	labelOutFileName = outfileName + 'test.txt'
 	values = [];
-	with open(datapath+'list.txt','r') as fp:
-		values = [line.split() for line in fp];
+	create_folder_structure_if_not_exists(vidOutFileName);
+	with open(datapath+os.sep+group+".txt",'r') as fp:
+		for line in fp:
+			values.extend([line.split()]);
 	numClass = len(values);
 	numExamples = (duration*framerate)/(vidLen);
 	randomNumbers = np.random.random_integers(0,numClass-1,numExamples);
@@ -36,14 +38,16 @@ def createVideo(datapath,outfileName,shape,duration=120,framerate=20,vidLen=32):
 if __name__ == "__main__":
 	import argparse
 	parser = argparse.ArgumentParser(description='Creating a sample UCF50 video')
-	parser.add_argument("datapath",nargs='?',help = "input path of data",default="/media/sudhar/Data/mtech/SemIV/data/UCF50/UCF50/");
-	parser.add_argument("out",nargs='?',help = "output path of the label",default="test_results/test");
-	parser.add_argument("shape",nargs='*',help = "shape of the video",default=[320,240],type=int);
-	parser.add_argument("fps",nargs='?',help = "framerate of created video",default=20,type=int);
-	parser.add_argument("vidseq",nargs='?',help = "length of individual video sequence",default=20,type=int);
-	parser.add_argument("duration",nargs='?',help = "duration of output video",default=120,type=int);
+	parser.add_argument("-datapath",nargs='?',help = "input path of data",default="/media/sudhar/Data/mtech/SemIV/data/UCF50/UCF50/");
+	parser.add_argument("-group",nargs='?',help = "category of video",default="ALL");
+	parser.add_argument("-out",nargs='?',help = "output path of the label",default="sample_test_ucf/");
+	parser.add_argument("-shape",nargs='*',help = "shape of the video",default=[320,240],type=int);
+	parser.add_argument("-fps",nargs='?',help = "framerate of created video",default=20,type=int);
+	parser.add_argument("-vidseq",nargs='?',help = "length of individual video sequence",default=40,type=int);
+	parser.add_argument("-duration",nargs='?',help = "duration of output video",default=60,type=int);
 	args = parser.parse_args();
-	createVideo(args.datapath,args.out,args.shape,args.duration,args.fps,args.vidseq);
+	out = args.out + os.sep + args.group + os.sep
+	createVideo(args.datapath,args.group,out,args.shape,args.duration,args.fps,args.vidseq);
 	print 'Creating UCF 50 video [DONE]'
 		
 		
