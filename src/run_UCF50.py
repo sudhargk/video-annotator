@@ -1,8 +1,9 @@
-import cv2,numpy as np,time
+import cv2,numpy as np,time,os
 from multiprocessing.pool import ThreadPool
 from collections import deque
 from skimage.feature import canny
 
+from pylab import cm
 from dnn_predict import get_instance as dnn_instance
 from io_module.video_reader import VideoReader
 from io_module.video_writer import VideoWriter;
@@ -29,8 +30,8 @@ def load_labels(fileName):
 			idx += 1;
 	return labels;
 	
-def __draw_str__(dst, (x, y), s, fontsize = 0.3, color=[255, 255, 255]):
-	cv2.putText(dst, s, (x, y), cv2.FONT_HERSHEY_SIMPLEX, fontsize, tuple(color), lineType=cv2.CV_AA)
+def __draw_str__(dst, (x, y), s, fontface = cv2.FONT_HERSHEY_SIMPLEX,fontsize = 0.3, color=[255, 255, 255]):
+	cv2.putText(dst, s, (x, y),fontface, fontsize, tuple(color), lineType=cv2.CV_AA)
 		
 def __draw_rect__(frame,window_center,window_size):
 	ac_shape = frame.shape[:2];
@@ -71,7 +72,6 @@ def load_predictors(modelFile):
 	return predictors,predictorStartIdx;
 	
 def sobel(frame):
-	print frame.dtype,frame.shape
 	frame = GRAY(frame);
 	gx = cv2.Sobel(frame, cv2.CV_32F, 1, 0)
 	gy = cv2.Sobel(frame, cv2.CV_32F, 0, 1)
@@ -182,8 +182,8 @@ class BlockTask(object):
 
 class UCF50Processor(object):
 	def __init__(self,vidfile,labelfile,modelFile,labelListFile,exportPath,
-							perClassFrames=20,frameRate=20,context_size=5,
-							banerWidth = 50,scale = 1):
+							perClassFrames=40,frameRate=20,context_size=5,
+							banerWidth = 80,scale = 1):
 		# input properties
 		self.vidreader = VideoReader(vidfile);
 		self.labelreader = open(labelfile,'r');
@@ -192,6 +192,10 @@ class UCF50Processor(object):
 		self.context_size=context_size;
 		self.perClassFrames = perClassFrames;
 		self.labels = load_labels(labelListFile);
+		self.n_outs = len(self.labels);
+		self.flag_colors = [];
+		for index in range(self.n_outs):
+			self.flag_colors.extend([tuple(np.array(cm.jet(index/float(self.n_outs))[:3][::-1])*255)])
 		self.predictors,self.predictorStartIdx = load_predictors(modelFile);
 		self.input_shape = [self.height,self.width,3]
 		self.batch_size = self.predictors[0].batch_size
@@ -216,23 +220,20 @@ class UCF50Processor(object):
 		assert(frame.ndim==3),"given frame not in shape"
 		baner_frame = np.zeros((self.height,self.banerWidth,3));
 		_indices = np.argsort(_score)[::-1];
-		col = 5; row = 10; steps = ((self.height-30)/(top+1))-5;
-		for classLbl in _indices[:top]:
-			_str = "{0}".format(self.labels[classLbl]);
-			__draw_str__(baner_frame,(col,row),_str,color=self.colors[classLbl]); row += steps
-		
-		row += steps
+		col = 5; row = 8; steps = ((self.height-30)/(top+1))-5;
+		small_fface = cv2.FONT_HERSHEY_DUPLEX;
+		__draw_str__(baner_frame,(col+3,row),">PREDICTION<",color=(255,255,255),fontsize=0.25,fontface=small_fface); row += steps
+		for pos,classLbl in enumerate(_indices[:top]):
+			_str = "{0}. {1}".format(pos+1,self.labels[classLbl]);
+			__draw_str__(baner_frame,(col,row),_str,color=self.colors[classLbl],fontsize=0.25); row += steps
+		__draw_str__(baner_frame,(col+3,row),">ACTUAL<",color=(255,255,255),fontsize=0.25,fontface=small_fface); row += steps
 		if not _label is None:
-			_str = ">{0}<".format(self.labels[_label]);
-			__draw_str__(baner_frame,(col,row),_str,fontsize=0.5,color=self.colors[_label]);
-		
-		if _indices[0] == _label:
-			cv2.circle(baner_frame,(self.banerWidth/2,self.height-10),8,(0,255,0),-1);
-		elif _label in _indices[1:top]:	
-			cv2.circle(baner_frame,(self.banerWidth/2,self.height-10),8,(0,128,128),-1);
-		else :
-			cv2.circle(baner_frame,(self.banerWidth/2,self.height-10),8,(0,0,255),-1);
-			
+			_str = "{0}".format(self.labels[_label]); 
+			__draw_str__(baner_frame,(col,row),_str,color=self.colors[_label],fontsize=0.25);
+			rank = list(_indices).index(_label); _str = "Rank : {0}".format(rank+1); row += steps;
+			__draw_str__(baner_frame,(col+3,row),_str,color = (255,255,255),fontsize=0.25);
+			cv2.rectangle(baner_frame,(8,self.height-12),(self.banerWidth-8,self.height-3),(255,255,255),1);
+			cv2.rectangle(baner_frame,(10,self.height-10),(self.banerWidth-10,self.height-5),self.flag_colors[rank],-1);
 		return np.hstack((baner_frame,frame));	
 		
 	def __readNextFrame__(self):
@@ -278,13 +279,15 @@ class UCF50Processor(object):
 if __name__ == '__main__':
 	import argparse
 	parser = argparse.ArgumentParser(description='Testing MNIST dataset with model')
-	parser.add_argument("input",nargs='?',help = "input path of data",default="sample_test_ucf/ALL/test.avi");
-	parser.add_argument("label",nargs='?',help = "input path of actual label",default="sample_test_ucf/ALL/test.txt");
-	parser.add_argument("labelmap",nargs='?',help = "label mappings",default="sample_test_ucf/ALL/labels.txt");
-	parser.add_argument("model",nargs='?',help = "path of model config file",default="sample_test_ucf/ALL/test.model");
-	parser.add_argument("output",nargs='?',help = "save path",default="testout.avi");
+	parser.add_argument("-input",nargs='?',help = "input path of data",default="sample_test_ucf");
+	parser.add_argument("-output",nargs='?',help = "save path",default="testout.avi");
 	args = parser.parse_args();
-	vidProcessor = UCF50Processor(args.input,args.label,args.model,args.labelmap,args.output);
+	inputVid = args.input + os.sep + "ALL" + os.sep + "test.avi"
+	label  = args.input + os.sep + "ALL" + os.sep + "test.txt"
+	model = args.input + os.sep + "ALL" + os.sep + "test.model"
+	labelmap = args.input + os.sep + "ALL" + os.sep + "labels.txt"
+	output = args.input + os.sep + "ALL" + os.sep + args.output
+	vidProcessor = UCF50Processor(inputVid,label,model,labelmap,output);
 	vidProcessor.process();
 	print 'Processing UCF dataset [DONE]'		
 		

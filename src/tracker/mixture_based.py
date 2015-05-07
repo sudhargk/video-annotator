@@ -56,8 +56,13 @@ class MixtureBased(Tracker):
 			self.hist_gmm.means_ = hist_means;	
 			self.hist_gmm.covars_ = hist_covars;
 			self.hist_gmm.weights_ = hist_weights;
-		self.hist_gmm.fit(hist_feats);
-		self.shape_kmeans.fit(shape_feats);
+		
+		try :
+			self.hist_gmm.fit(hist_feats);
+			self.shape_kmeans.fit(shape_feats);
+		except RuntimeError:
+			self.hist_gmm = None
+			self.shape_kmeans = None
 		
 	def track_object(self,frames,masks):
 		hsv_frames = [];
