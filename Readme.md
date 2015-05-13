@@ -1,6 +1,6 @@
 Highlights
 ==========
-+ Obtaining Localization from background subtraction and saliency.
++ Obtaining localization from background subtraction and saliency.
 + Novel method to obtain the bouding box with proposed tracking algorithm.
 
 Proposed Technique
