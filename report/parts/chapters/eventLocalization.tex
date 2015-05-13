@@ -61,27 +61,27 @@ Visual saliency is a unique perceptual aspect that makes some items in the world
 
 \par Different saliency estimation techniques that were studied are discussed below.  All these techniques can be considered either at region level or pixel level, based on whether the segmentation of the image is considered or not.
 
-\subsection{Hierarchical Color Based (HCB)}
+\subsection{Hierarchical Color Based approach(HCB)} 
 HCB is a top-down approach for computing saliency where saliency map of improbable pixels/regions are set to zero at every iteration.  Saliency of pixel/region $I_{x}$ is computed as follows,
 $$ Iavg_{x} = \Sigma_{y} I_{y}~\exp^{-\frac{\parallel~p_{x} - p_{y}~\parallel}{w}}  $$
 $$ saliency(I_{x}) =~\parallel I_{x} - Iavg_{x} \parallel $$
 where $p_{x}$ is the position of the pixel $I_{x}$.  At each iteration, $w$ is decreased implying closer neighbourhood.  After each iteration pixels/regions with $ saliency(I_{x})$ lesser than $0.1$ after normalization are eliminated.  The foreground pixels/regions are obtained by discarding the background pixels/regions.  The primary focus is to measure the variation from the average pixel intensity.
 
-\subsection{Context Aware Based (CAB)}
+\subsection{Context Aware Based approach (CAB)}
 In CAB, saliency estimate are averaged out at a different context windows.  The expressions for the estimation of saliency is given below,
 $$ AllPairDistance(I_{x},I_{y},k) = \exp^{-\frac{\parallel~p_x - p_y~\parallel}{dw_k}}~\exp^{-\frac{\parallel~I_{x} - I_{y}~\parallel}{cw}}$$
 $$ NormDistance(I_{y},k) = \Sigma_{x} AllPairDistance(I_{x},I_{y},k)$$
 $$ saliency(I_{x}) = 1- \Sigma^{K}_{k=1}~dw_{k}~\Sigma_{y}~\frac{AllPairDistance(I_{x},I_{y},k)}{NormDistance(I_{y},k)}$$
 where $cw$ and $K$ are color weight and number of context windows respectively.  Saliency measures the similarity with its neighbourhood weighted on proximity of the pixels/regions. $AllPairDistance(I_{x},I_{y},k)$ is disparity measure across pairs of pixels/regions $(I_{x},I_{y})$ for different values of $dw_{k}$ while $NormDistance(I_{y},k)$ correspond to the normalizing factor. This technique performs fairly well in discriminating salient objects which are not in same scale.
 
-\subsection{Spectral Distribution Based (SDB)} 
+\subsection{Spectral Distribution Based approach (SDB)} 
 SDB is based on the intuition that pixels with small color distribution variances have high saliency values.  The extent of color distribution is measured from the spatial variance of all colors in the image.  \cite{spectralSal} proposed a technique to compute color spatial variances using Gaussian Mixture Models (GMMs).  All pixels/regions in the image are represented by GMMs using expectation maximization (EM) algorithm, where $w_{c}$, $\mu_{c}$ and $\Sigma_{c}$ is the weight, the mean color, and the covariance matrix of the $c^{th}$ mixture. Each pixel/region is assigned to a mixture with the probability:
 $$p(c | I_{x}) = \frac{w_{c}\eta(I_{x}| \mu_{c},\Sigma_{c})}{\Sigma_{c}w_{c}\eta(I_{x}| \mu_{c},\Sigma_{c}} $$
 Suppose $x_{h}$ is the x coordinate (horizontal coordinate) of the pixel x. The spatial variance for x-dimension of color component c is computed as:
 $$\sigma_{h}^{2}(c) = \frac{1}{|P|_{c}}\Sigma_{x}	p(c | I_{x}) \parallel x_{h} -M_{h}(c) \parallel^{2}$$
-where $M_{h}(c) = \frac{1}{|P|_{c}}\Sigma_{x}p(c|I_{x})~x_h$ , and $|P|_{c} = \Sigma_{x}p(c | I_{x})$ is a normalization factor.  The vertical variance $\sigma_{v}^{2}(c)$ is defined similarly.  The spatial variance of a component c is combined as: $\sigma^{2}(c) = \sigma_{h}^{2}(c) + \sigma_{c}^{2}(c)$ which is then normalized.
+where $M_{h}(c) = \frac{1}{|P|_{c}}\Sigma_{x}p(c|I_{x})~x_h$ , and $|P|_{c} = \Sigma_{x}p(c | I_{x})$ is a normalization factor.  The vertical variance $\sigma_{v}^{2}(c)$ is defined similarly.  The spatial variance of a component c is combined as: $\sigma^{2}(c) = \sigma_{h}^{2}(c) + \sigma_{v}^{2}(c)$ which is then normalized.
 The saliency $saliency(I_{x})$ of a specific pixel $I_{x}$ regarding to color spatial distribution is defined as the weighted sum:
-$$saliency(I_{x}) = \Sigma_{x}p(c | I_{x})(1-\sigma^{2}(x))$$
+$$saliency(I_{x}) = \Sigma_{c}p(c | I_{x})(1-\sigma^{2}(c))$$
 This method yields very good results for many examples but the configurations requires tweaks for better results.
 
 \subsection{Regional Contrast (RC)}
@@ -111,14 +111,14 @@ where $k$ controls the emphasis on distribution while both the contrast measure 
   \label{sec:ts}
 Smoothening of the event mask obtained at frame level is essential because of occlusion and illumination variations.  A common approach which was followed for the smoothening of frame was by blending the background subtraction measure and the saliency measure to obtain a \textit{visual attention score}. Higher visual attention score ($\geqslant0.8$) were considered \textit{true foreground} while lower visual attention score ($\leqslant0.2$)  were considered \textit{true background}.  Then models are built for prediction of other regions/pixels.  Three approaches for smoothening of visual attention measure are described below and in all approaches context before and after the frame is considered.
 
-\subsection{Eigen Based}
+\subsection{Eigen Based model}
 Eigen Based method is based on projecting the pixels along the direction of maximum variance for foreground and background.  Any pixel is assigned foreground if the projection along the direction of maximum variance is large along foreground compared to background.  The direction of maximum variance are computed by gathering features (pixel level features like color, texture, gradient and position) of foreground/background pixels in the context and perform the principal component analysis (PCA).  This approach of smoothening, did not yield good localization.
 
-\subsection{Semi-supervised}
+\subsection{Semi-supervised model}
 Semi-supervised learning are techniques where in the training data some of the samples are not labelled, this appropriately fits the smoothening task.  In such techniques, the unlabelled data are made use for capturing the manifold of the underlying data distribution thus generalize better for new examples. 
-\par In this work, label propagation \citep{labprop} is used, it constructs a similarity graph over all pixel in given context, where nodes's label is spread based on the similarity.   The labeled data acts like sources that push out labels through unlabeled data.  This technique was computationally intensive as we are required to build model using all pixels in the frame for given context.  There was no adaptation mechanism which was available, for a faster convergence of learning algorithm.
+\par In this work, label propagation is used, it constructs a similarity graph over all pixel in given context, where nodes's label is spread based on the similarity.   The labeled data acts like sources that push out labels through unlabeled data.  This technique was computationally intensive as we are required to build model using all pixels in the frame for given context.  There was no adaptation mechanism which was available, for a faster convergence of learning algorithm.
 
-\subsection{Gaussian Mixture Model Based}
+\subsection{Gaussian Mixture model}
 Gaussian mixture model was  most successful experiment among the techniques considered.  In this approach, two Gaussian mixture model were built using true foreground and background examples. Each and every pixels are assigned to either foreground or background based on the likelihood scores of foreground and background model.  One of the biggest advantage of this approach is its support to adapt, i.e models of previous frames can be fine-tuned for the current frames which helps training individual context models quickly.
 
 \par Because of the swiftness and the robustness the Gaussian mixture models was examined for all the experiments.  Few post processing operation were carried over the predicted mask like median smoothing, region filling were performed to remove the salt and pepper noises and spurious regions that are small.  Figure \ref{fig:smoothen} shows smoothed mask obtained from from the visual attention score.  It shows how the model captures interesting regions even if their visual attention scores are not so eminent in that frame.
@@ -135,7 +135,7 @@ Gaussian mixture model was  most successful experiment among the techniques cons
 \section{Tracking}
  \label{sec:trac}
 Tracking focuses on drawing a bounding box around a region of interest and tracking them in a train of frames.  After detecting interesting regions and post-processing operations, the filtered masks are grouped into connected regions (blobs) and labelled by using a connected component labelling algorithm.  The bounding boxes of these blobs corresponding to a object/subject are computed by a novel approach.  It ensures mask to be present even if there are any uneventful (no mask) or extremely eventful (too many mask) frame.
-\par This task is accomplished by building two GMM models, one to characterize the location of the event (like x-y coordinates and size) and other to characterize region color properties (like color histogram).  The GMM model built with context of 4-8 frame context gives the location and size of localized region in the frame.  Back projection \citep{backProj} of region of interest (obtained from mean of GMM model) on the given frame is measured that determines the probability of a pixel belong to the object.  The back-projected image  will have region of interest in white, while black for others.  A fine-tuning of the result is attained using the mean shift algorithm.  The intuition behind mean-shift algorithm is simple, the tracking window is shifted until it reaches the area of maximum pixel density.  When the object moves, obviously the movement is reflected in histogram of back-projected image. 
+\par This task is accomplished by building two GMM models, one to characterize the location of the event (like x-y coordinates and size) and other to characterize region color properties (like color histogram).  The GMM model built with context of 4-8 frames gives the location and size of localized region in the frame.  Back projection \citep{backProj} of region of interest (obtained from mean of GMM model) on the given frame is measured. It determines the probability of a pixel belong to the object.  The back-projected image  will have region of interest in white, while black for others.  A fine-tuning of the result is attained using the mean shift algorithm.  The intuition behind mean-shift algorithm is simple, the tracking window is shifted until it reaches the area of maximum pixel density.  When the object moves, obviously the movement is reflected in histogram of back-projected image. 
 \par In this manner, tracking an event without the knowledge of location of interest is made possible.  The bounding box obtained are of different size, so all windows are extended to the shape largest enclosing one.  All these train of  windows form the spatio-temporal volume (STV). Figure \ref{fig:tracking} depicts STV for multiple events : horse riding, javelin, horse racing and bench press videos.
 \begin{figure}[htpb]
    \begin{center}

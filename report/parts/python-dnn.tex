@@ -75,6 +75,7 @@ All the configuration are in \textit{json} which is a open standard format for t
 \subsubsection{Finetune Parameters}
 \label{subsec:finetuneparam}
 There are two learning rate adjustment technique supported by tool-kit, which are,
+\hspace{-2em}
 \begin{itemize}
 \item C: Constant learning rate: run `epoch\_num' iterations with `learning\_rate' unchanged
 \item E: Exponential decay: learning rate started initially with \emph{start\_rate}.  If the validation error reduction between two epochs is less than \emph{min\_derror\_decay\_start}, the learning rate is scaled down by \emph{scale\_by}.  The training terminates when the validation error between two epochs is below \emph{min\_derror\_stop}.
@@ -99,7 +100,6 @@ There are two learning rate adjustment technique supported by tool-kit, which ar
 \end{table} 
  
 \clearpage
-
 \subsubsection{Data Configuration (data.conf)}
 \begin{table}[!htbp]
 \begin{center}
