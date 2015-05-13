@@ -2,6 +2,9 @@ import cv2,numpy as np,time,os
 from multiprocessing.pool import ThreadPool
 from collections import deque
 from skimage.feature import canny
+from skimage.morphology import remove_small_objects
+from skimage.measure import label
+from scipy.ndimage.morphology import binary_fill_holes
 
 from pylab import cm
 from dnn_predict import get_instance as dnn_instance
@@ -21,7 +24,17 @@ bg = bg_instance(BGMethods.FRAME_DIFFERENCING);
 smoothner =  smooth_instance(feats,SmoothMethods.GMM_BASED);
 tracker = tracker_instance(TrackerMethods.MIXTURE_BASED);
 
-
+KERNEL = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3));
+def __morphologicalOps__(mask):
+	#_mask = binary_fill_holes(mask)
+	_mask = cv2.medianBlur(np.uint8(mask),3)
+	_mask = cv2.morphologyEx(_mask, cv2.MORPH_CLOSE,KERNEL)
+	_mask = binary_fill_holes(_mask)
+	_mask = remove_small_objects(_mask,min_size=128,connectivity=2)
+	kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
+	_mask = cv2.dilate(np.uint8(_mask),kernel,iterations = 1)
+	return _mask;
+	
 def load_labels(fileName):
 	idx = 0; labels ={}
 	with open(fileName,'r') as f:
@@ -32,9 +45,13 @@ def load_labels(fileName):
 	
 def __draw_str__(dst, (x, y), s, fontface = cv2.FONT_HERSHEY_SIMPLEX,fontsize = 0.3, color=[255, 255, 255]):
 	cv2.putText(dst, s, (x, y),fontface, fontsize, tuple(color), lineType=cv2.CV_AA)
-	
-def __draw_rect__(frame,window_center,window_size):
+
+def __draw_rect__(frame,window_center,window_size,sMask):
+	sMask = __morphologicalOps__(sMask);
 	ac_shape = frame.shape[:2];
+	zero_frame= np.zeros(frame.shape,dtype = np.uint8);
+	zero_frame[:,:,2]=sMask*255;
+	frame = cv2.addWeighted(np.uint8(frame),0.6,zero_frame,0.4,0);
 	window_size = np.uint8(window_size);
 	left = np.array(window_center - window_size/2,dtype=np.int8);
 	left[0] = min(left[0],ac_shape[0]-window_size[0]); left[0] = max(left[0],0)
@@ -96,20 +113,20 @@ def compute_vas_masks(frames,num_prev_frames=1,num_blocks=4):
 		end_idx =  (num_frames if idx == num_frames else 3*num_blocks/2);
 		s = idx-2*num_blocks; e = s + 2*num_blocks; idx += num_blocks
 		sMasks.extend(smoothner.process(frames[s:e],fgMasks[s:e],bgMasks[s:e],range(start_idx,end_idx)));
-	
 	return sMasks
 	
 def processClassFrames(frames,contextSize):
 	start = time.time();
 	height,width = frames[0].shape[:2];
-	sMasks = compute_vas_masks(frames); 	windowCenters = [];
+	sMasks = compute_vas_masks(frames); 	
+	windowCenters = []; smoothenedMasks = [];
 	prev_rect = np.array([width/4,height/4,width/2,height/2],dtype=np.float32);
 	prev_center = np.array([width/2,height/2],	dtype=np.float32);
 	windowSize = np.zeros(2);
 	for frame_idx in range(len(frames)/contextSize):
 		s = frame_idx; e = s + contextSize; 
 		propWindows = tracker.track_object(frames[s:e],sMasks[s:e]);
-		windowCenter = [];
+		windowCenter = []; smoothenedMasks.extend([sMasks[s:e]]);
 		for propWindow in propWindows:
 			(window,lbl) = propWindow[0]
 			rect = np.array([window[0],window[1],window[2]-window[0],window[3]-window[1]],dtype=np.float32);
@@ -121,13 +138,14 @@ def processClassFrames(frames,contextSize):
 			windowCenter.extend([window_center]);
 		windowCenters.extend([[windowCenter,windowSize]]);
 	print "Time Taken ", (time.time()-start),"seconds"
-	return windowCenters;
+	return windowCenters,smoothenedMasks;
 		
 class BlockTask(object):
-	def __init__(self,frameBlock,processedWindowsBlock,labels,cnt,
-								rsz_shape=[80,60],block_size=5):
+	def __init__(self,frameBlock,processedWindowsBlock,smoothenedMasks,
+						labels,cnt, rsz_shape=[80,60],block_size=5):
 		self.frameBlock = frameBlock;
 		self.processedWindowsBlock = processedWindowsBlock;
+		self.smoothenedMasks = smoothenedMasks;
 		self.labels = labels;
 		self.cnt = cnt;
 		self.rsz_shape=rsz_shape
@@ -135,11 +153,11 @@ class BlockTask(object):
 	
 	def __buildFrames__(self):
 		dispFrames = []; blocksFeats = []; groupIdx = 0;
-		for frameGroup,processedWindows in zip(self.frameBlock[:self.cnt],self.processedWindowsBlock[:self.cnt]):
+		for frameGroup,processedWindows,smoothenedMasksBlock in zip(self.frameBlock[:self.cnt],self.processedWindowsBlock[:self.cnt],self.smoothenedMasks[:self.cnt]):
 			windowCenters,windowSize = processedWindows;
 			blockFeats = [];
-			for frame,windowCenter in zip(frameGroup,windowCenters):
-				dispFrames.extend([__draw_rect__(frame,windowCenter,windowSize)]);
+			for frame,windowCenter,smoothenedMask in zip(frameGroup,windowCenters,smoothenedMasksBlock):
+				dispFrames.extend([__draw_rect__(frame,windowCenter,windowSize,smoothenedMask)]);
 				blockFeats.extend(__crop_frame__(frame,windowCenter,windowSize,self.rsz_shape))
 			blockFeats = np.array(blockFeats).reshape([self.block_size,self.rsz_shape[1],self.rsz_shape[0],3])
 			blockFeats = np.swapaxes(blockFeats,1,3);
@@ -240,24 +258,25 @@ class UCF50Processor(object):
 			(frameCnt,frames,labels)=blockReader.readNextBlock();
 			#print "READ A BLOCK...", len(self.tasks)
 			if frameCnt > 0:
-				processedWindowCenter = self.__process_block__(frames[:frameCnt]);
-				vidTask = BlockTask(frames,processedWindowCenter,labels,frameCnt)
+				processedWindowCenter,smoothenedMasks = self.__process_block__(frames[:frameCnt]);
+				vidTask = BlockTask(frames,processedWindowCenter,smoothenedMasks,labels,frameCnt)
 				#self.tasks.append(vidTask);
 				vidTask.process(self.vidWriter,self.predictor,self.__design_frame_banner__);
 		self.isFinished = True;	
 		
 	
 	def __process_block__(self,frameBlock):
-		windowCenters = [];
+		windowCenters = []; smoothenedMasks = [];
 		numGroupsPerClass = self.perClassFrames/self.context_size;
 		for idx in range(len(frameBlock)/numGroupsPerClass):
 			classFrames = [];
 			for frameGroup in frameBlock[idx*numGroupsPerClass:(idx+1)*numGroupsPerClass]:
 				for frame in frameGroup:
 					classFrames.extend([frame]);
-			c_windowCenters = processClassFrames(classFrames,self.context_size)
+			c_windowCenters,sMask = processClassFrames(classFrames,self.context_size)
 			windowCenters.extend(c_windowCenters);
-		return windowCenters;
+			smoothenedMasks.extend(sMask);
+		return windowCenters,smoothenedMasks;
 		
 if __name__ == '__main__':
 	import argparse

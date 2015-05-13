@@ -20,7 +20,7 @@ def bgsub_process(bgsubImpl,frames,idx):
 	out_frame = cv2.addWeighted(np.float32(frames[N-1]),0.6,zero_frame,0.4,0.0)
 	return np.uint8(out_frame),idx;
 	
-def process_video(bgsubImpl,vidreader,vidwriter,num_blocks=4, threaded = False):
+def process_video(bgsubImpl,vidreader,vidwriter,num_blocks=6, threaded = False):
 	vidwriter.build();
 	threadn = cv2.getNumberOfCPUs();	pool = ThreadPool(processes = threadn);
 	pending = deque();	N = vidreader.frames; frameIdx = num_blocks;

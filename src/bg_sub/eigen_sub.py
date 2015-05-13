@@ -9,7 +9,7 @@ from bg_sub import BGSubtractionImpl
 """
 
 class EigenBGSubImpl(BGSubtractionImpl):
-	def __init__(self,K = 2,threshold=0.1):
+	def __init__(self,K = 2,threshold=0.25):
 		super(EigenBGSubImpl,self).__init__(threshold)
 		self.K = K;
 		

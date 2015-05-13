@@ -8,7 +8,7 @@ from bg_sub import BGSubtractionImpl
 		alpha (float) : values [0-1] specifies the importance to current frame, default 0.3
 """
 class FrameDifferencingImpl(BGSubtractionImpl):
-	def __init__(self,alpha=0.0,threshold = 0.1):
+	def __init__(self,alpha=0.0,threshold = 0.2):
 		super(FrameDifferencingImpl,self).__init__(threshold)
 		self.alpha = alpha;
 		

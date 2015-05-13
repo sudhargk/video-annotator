@@ -6,7 +6,7 @@ from bg_sub import BGSubtractionImpl
 	A background subtraction technique using gausian mixture technique
 """
 class BackgroundSubtractorMOGImpl(BGSubtractionImpl):
-	def __init__(self,threshold=0.05):
+	def __init__(self,threshold=0.1):
 		super(BackgroundSubtractorMOGImpl,self).__init__(threshold)
 		
 	def process(self,cur_frame,prev_frames):
