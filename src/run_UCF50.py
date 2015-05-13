@@ -21,7 +21,17 @@ bg = bg_instance(BGMethods.FRAME_DIFFERENCING);
 smoothner =  smooth_instance(feats,SmoothMethods.GMM_BASED);
 tracker = tracker_instance(TrackerMethods.MIXTURE_BASED);
 
-
+KERNEL = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3));
+def __morphologicalOps__(mask):
+	#_mask = binary_fill_holes(mask)
+	_mask = cv2.medianBlur(np.uint8(mask),3)
+	_mask = cv2.morphologyEx(_mask, cv2.MORPH_CLOSE,KERNEL)
+	_mask = binary_fill_holes(_mask)
+	_mask = remove_small_objects(_mask,min_size=128,connectivity=2)
+	kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
+	_mask = cv2.dilate(np.uint8(_mask),kernel,iterations = 1)
+	return _mask;
+	
 def load_labels(fileName):
 	idx = 0; labels ={}
 	with open(fileName,'r') as f:
