@@ -32,7 +32,7 @@ All the configuration are in \textit{json} which is a open standard format for t
  	 *\emph{data\_spec} & path for data specification relative to model.conf & \\ \hline
 	 *\emph{nnet\_spec} & path for network configuration specification relative to model.conf & \\ \hline
 	 *\emph{output\_file} & path for network model file relative to wdir & \\ \hline
-	 \emph{input\_file} & path for pre-trained/fine-tuned model relative to wdir. & \\ \hline
+	 \emph{input\_file} & path for pre-trained/fine-tuned model relative to wdir & \\ \hline
 	 \emph{random\_seed} & random seed for initialization of weights & none \\ \hline
 	 \emph{logger\_level} & logger level : 'INFO','DEBUG' and 'ERROR' & 'INFO' \\ \hline
 	 \emph{batch\_size} & mini batch size  & 128 \\ \hline
@@ -74,7 +74,7 @@ All the configuration are in \textit{json} which is a open standard format for t
 \end{table}
 \subsubsection{Finetune Parameters}
 \label{subsec:finetuneparam}
-There are two learning rate adjustment technique supported by tool-kit, which are,
+There are two learning rate adjustment technique supported by toolkit, which are,
 \hspace{-2em}
 \begin{itemize}
 \item C: Constant learning rate: run `epoch\_num' iterations with `learning\_rate' unchanged
@@ -118,9 +118,9 @@ There are two learning rate adjustment technique supported by tool-kit, which ar
   \end{tabular}		
 \end{center}
 \end{table} 
-\noindent For the purpose of using the tool-kit, data have to be in one of the file format.
+\noindent For the purpose of using the toolkit, data has to be in one of the following file format:
 \begin{itemize}
-\item{\textbf {Numpy Format [NP]:}The dataset is stored as single file in binary format in following structure,
+\item{\textbf {Numpy Format [NP]:}The dataset is stored as a single file in binary format in following structure:
 \begin{lstlisting}[language=bash,basicstyle=\small] 
 <json-header>
 <structured numpy.array>
@@ -129,14 +129,14 @@ There are two learning rate adjustment technique supported by tool-kit, which ar
 \end{lstlisting}
 json-header  : featdim (dimension of input vector after flattening), input\_shape (shape of input).}
 
-\item{\textbf {Text File (One level header) [T1]:} The dataset contains a root file with list of  text file names corresponding to a class. It has following format,
+\item{\textbf {Text File (One level header) [T1]:} The dataset contains a root file with list of  text file names corresponding to a class. It has following format:
 \begin{lstlisting}[language=bash,basicstyle=\small] 
 <feat_dim> <num_classes>
 <data_file1>
 <data_file2>
 ..
 \end{lstlisting}
-data\_file correspond to individual class files with following structure,
+data\_file correspond to individual class files with following structure:
 \begin{lstlisting}[basicstyle=\small] 
 <feat_dim> <num_feat_vectors(optional)>
 <feat_vector>
@@ -144,14 +144,14 @@ data\_file correspond to individual class files with following structure,
 ..
 \end{lstlisting}}
 
-\item{\textbf {Text File (Two level header) [T2]:} This format has got extra level of indirection, the root file has got following structure,
+\item{\textbf {Text File (Two level header) [T2]:} This format has got extra level of indirection, the root file has got following structure:
 \begin{lstlisting}[language=bash,basicstyle=\small] 
 <feat_dim> <num_classes>
 <class_index_file1>
 <class_index_file2>
 ..
 \end{lstlisting}
-class\_index\_file constitute of list of data filenames belonging to single class, 
+class\_index\_file constitute of list of data filenames belonging to single class: 
 \begin{lstlisting}[basicstyle=\small] 
 <data_file1>
 <data_file2>
@@ -172,7 +172,7 @@ class\_index\_file constitute of list of data filenames belonging to single clas
 		\emph{convmat\_dim} & dimension of convolution weights \\  \hline
 		\emph{num\_filters} & number of feature maps \\  \hline
 		\emph{poolsize} & max-pooling dimensions \\  \hline
-		\emph{update} & updated weight during training. \\  \hline
+		\emph{update} & updated weight during training \\  \hline
 		\emph{activation} & activation function used by the layer \\ 
 		\end{tabular} \\ \hline
 	  \emph{activation} & global activation function \\ \hline
@@ -185,9 +185,9 @@ class\_index\_file constitute of list of data filenames belonging to single clas
 		\begin{tabular}{r|p{6cm}} %\hlne
 			\emph{method} &  'maxout','pnorm' \\ \hline
 			\emph{pool\_size} & pool size (in pnorm) \\ \hline
-			\emph{pnorm\_order} & norm order for pnorm. (default: 1) \\
+			\emph{pnorm\_order} & norm order for pnorm (default: 1) \\
 		\end{tabular} \\ \hline
-	  \emph{activation} & activation function for mlp layers. (if adv\_activation is used, then either 'linear','relu' or 'cappedrelu') \\ 
+	  \emph{activation} & activation function for mlp layers (if adv\_activation is used, then either 'linear','relu' or 'cappedrelu') \\ 
  \end{tabular}	 \\ \hline
   \end{tabular}		
 \end{center}
@@ -198,9 +198,9 @@ class\_index\_file constitute of list of data filenames belonging to single clas
   	\medskip  \small \textit{Configuration of DNN}
    	\begin{tabular}{|c|p{8cm}|c|} \hline
    	\textbf{parameter} & \textbf{description} & \textbf{default}\\  \hline
-	*\emph{hidden\_layers} &  RBM layer sizes. & \\ \hline
-	\emph{pretrained\_layers} & number of layers  pre-trained. & 0 \\ \hline
-	\emph{activation} & activation function for the layers. (if adv\_activation is used, then either 'linear','relu' or 'cappedrelu') & tanh or linear \\ \hline
+	*\emph{hidden\_layers} &  RBM layer sizes & \\ \hline
+	\emph{pretrained\_layers} & number of layers  pre-trained & 0 \\ \hline
+	\emph{activation} & activation function for the layers (if adv\_activation is used, then either 'linear','relu' or 'cappedrelu') & tanh or linear \\ \hline
 	\emph{max\_col\_norm} & The max value of norm of gradients (in dropout and maxout)	& null \\ \hline
 	\emph{l1\_reg} &  l1 norm regularization & 0 \\ \hline
 	\emph{l2\_reg} &  l2 norm regularization & 0 \\ \hline
@@ -208,10 +208,10 @@ class\_index\_file constitute of list of data filenames belonging to single clas
 		\begin{tabular}{r|p{5cm}} %\hlne
 		\emph{method} &  'maxout','pnorm' \\ \hline
 		\emph{pool\_size} & pool size (in pnorm) \\ \hline
-		\emph{pnorm\_order} & norm order for pnorm. (default: 1) \\
+		\emph{pnorm\_order} & norm order for pnorm (default: 1) \\
 		\end{tabular} & \\ \hline
 	\emph{do\_dropout} &  use dropout or not & false  \\ \hline
-	\emph{dropout\_factor} & dropout factors for DNN layers. & [0.0] \\ \hline
+	\emph{dropout\_factor} & dropout factors for DNN layers & [0.0] \\ \hline
 	\emph{input\_dropout\_factor} & dropout factor for input features & 0.0 \\ \hline
 	\end{tabular}
 \end{center}
@@ -222,9 +222,9 @@ class\_index\_file constitute of list of data filenames belonging to single clas
   	\medskip  \small \textit{Configuration of DBN (RBM)}
 	\begin{tabular}{|c|p{8cm}|c|} \hline
    	\textbf{parameter} & \textbf{description} & \textbf{default}\\  \hline
-	*\emph{hidden\_layers} &  RBM layer sizes. & \\ \hline
-	\emph{activation} & activation function for the layers. & tanh \\ \hline
-	\emph{pretrained\_layers} & number of layers  pre-trained. & 0 \\ \hline
+	*\emph{hidden\_layers} &  RBM layer sizes & \\ \hline
+	\emph{activation} & activation function for the layers & tanh \\ \hline
+	\emph{pretrained\_layers} & number of layers  pre-trained & 0 \\ \hline
 	\emph{first\_layer\_type} & 'bb' (Bernoulli-Bernoulli) or 'gb' (Gaussian-Bernoulli) & gb  \\ 	\hline 
 	\end{tabular}		
 \end{center}
@@ -240,17 +240,17 @@ class\_index\_file constitute of list of data filenames belonging to single clas
 	\end{tabular}		
 \end{center} 
 \end{table} 
-\noindent It is quite evident in all model configuration the activation functions are crucial.  The activation function are used to transform the activation level of a unit (neuron) into an output signal.  Generally, activation functions have a "squashing" effect.  Python-DNN currently support following activation functions,
+\noindent It is quite evident in all model configuration the activation functions are crucial.  The activation function are used to transform the activation level of a unit (neuron) into an output signal.  Generally, activation functions have a 'squashing' effect.  Python-DNN currently support the following activation functions:
 \begin{itemize}
-\item {\textbf{sigmoid:} sigmoid function with equation: $f(x) = \frac{1}{(1 + \exp^{-x}}$. This is an S-shaped (sigmoid) curve, with output in the range $(0,1)$.}
+\item {\textbf{sigmoid:} sigmoid function with equation: $f(x) = \frac{1}{(1 + \exp^{-x})}$. This is an S-shaped (sigmoid) curve, with output in the range $(0,1)$.}
 \item {\textbf{tanh:} hyperbolic tangent function is a sigmoid curve, like the logistic function, except that output lies in the range $(-1,+1)$.} 
-\item {\textbf{relu:} rectifier linear unit is an activation function defined as $f(x) = max(0, x)$}
-\item {\textbf{cappedrelu:} same as ReLU except we cap the units at 6.ie, $f(x) = min(max(x,0),6)$}
+\item {\textbf{relu:} rectifier linear unit is an activation function defined as $f(x) = max(0, x)$.}
+\item {\textbf{cappedrelu:} same as ReLU except we cap the units at 6.ie, $f(x) = min(max(x,0),6)$.}
 \end{itemize}
 \clearpage
 
 \section{Usage}
-Quick steps for modelling any dataset using the toolkit,
+Quick steps for modelling any dataset using the toolkit:
 \begin{itemize}
 	\item{\textbf{Step 1 : Prepare Dataset:} Convert the datasets to one of the following data formats NP/T1/T2 formats. }
 	\item{\textbf{Step 2 : Configure model:} Copy the sample model configuration from a standard dataset, depending on the type of deep neural network set the value of \textit{nnetType} and change \textit{wdir} to the result directory location.  Update \textit{n\_ins} to input shape of neural network layer, for e.g 2d CNN accepting an image with dimension 80x60 with all 3 channel could be represented as [3,60,80], be careful in case of CNN's order plays crucial role.  Set \textit{n\_outs} to number of classes for supervised learning task.  Update the \textit{processes} flag based on type of model type like CNN do not have pre-training while for RBM and SDA pre-training is default.}

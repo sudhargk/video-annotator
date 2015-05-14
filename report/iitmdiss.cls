@@ -208,8 +208,10 @@ footskip=30pt,bottom=1in]{geometry}
   \vspace*{-0.15in}
   \begin{center}
     {\bf \large DEPARTMENT OF \MakeUppercase{\@department}\par}
-    {\bf \large INDIAN INSTITUTE OF TECHNOLOGY, MADRAS.}
+ %   {\bf \large INDIAN INSTITUTE OF TECHNOLOGY, MADRAS.}
+    {\bf \large INDIAN INSTITUTE OF TECHNOLOGY MADRAS.}
     \vglue 0.50em
+    \vspace{10pt}  
     {\bf \large \@date}\par
   \end{center}
   \parskip 8pt
