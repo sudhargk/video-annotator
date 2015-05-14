@@ -2,45 +2,77 @@ This is BibTeX, Version 0.99d (TeX Live 2013/Debian)
 Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: thesis.aux
 The style file: iitm.bst
+A level-1 auxiliary file: parts/certificate.aux
+A level-1 auxiliary file: parts/acknowledgement.aux
+A level-1 auxiliary file: parts/abstract.aux
+A level-1 auxiliary file: parts/abbreviation.aux
+A level-1 auxiliary file: parts/chapters/introduction.aux
+A level-1 auxiliary file: parts/chapters/eventLocalization.aux
+A level-1 auxiliary file: parts/chapters/eventRecognition.aux
+A level-1 auxiliary file: parts/chapters/experiments.aux
+A level-1 auxiliary file: parts/chapters/conclusion.aux
+A level-1 auxiliary file: parts/python-dnn.aux
 Database file #1: refs.bib
-You've used 3 entries,
+Repeated entry---line 250 of file refs.bib
+ : @inproceedings{YanKe05
+ :                       ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 261 of file refs.bib
+ : @inproceedings{YanKe07
+ :                       ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 270 of file refs.bib
+ : ISSN={1550-5499},}@inproceedings{Liu09
+ :                                       ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 280 of file refs.bib
+ : @incollection{Niebles10
+ :                        ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 316 of file refs.bib
+ : @article{Ji13
+ :              ,
+I'm skipping whatever remains of this entry
+Warning--empty journal in labprop
+You've used 24 entries,
             2930 wiz_defined-function locations,
-            624 strings with 5287 characters,
-and the built_in function-call counts, 1827 in all, are:
-= -- 132
-> -- 73
-< -- 2
-+ -- 24
-- -- 21
-* -- 148
-:= -- 268
-add.period$ -- 12
-call.type$ -- 3
-change.case$ -- 23
-chr.to.int$ -- 3
-cite$ -- 3
-duplicate$ -- 156
-empty$ -- 153
-format.name$ -- 28
-if$ -- 359
+            786 strings with 9829 characters,
+and the built_in function-call counts, 17479 in all, are:
+= -- 1222
+> -- 894
+< -- 10
++ -- 294
+- -- 266
+* -- 1540
+:= -- 2444
+add.period$ -- 85
+call.type$ -- 24
+change.case$ -- 233
+chr.to.int$ -- 24
+cite$ -- 25
+duplicate$ -- 1489
+empty$ -- 1377
+format.name$ -- 344
+if$ -- 3472
 int.to.chr$ -- 1
 int.to.str$ -- 1
-missing$ -- 31
-newline$ -- 24
-num.names$ -- 12
-pop$ -- 65
+missing$ -- 285
+newline$ -- 127
+num.names$ -- 100
+pop$ -- 638
 preamble$ -- 1
-purify$ -- 19
+purify$ -- 183
 quote$ -- 0
-skip$ -- 42
+skip$ -- 376
 stack$ -- 0
-substring$ -- 58
-swap$ -- 80
-text.length$ -- 1
+substring$ -- 577
+swap$ -- 810
+text.length$ -- 4
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 24
-warning$ -- 0
-while$ -- 11
+type$ -- 213
+warning$ -- 1
+while$ -- 96
 width$ -- 0
-write$ -- 49
+write$ -- 323
+(There were 5 error messages)
